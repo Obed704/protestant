@@ -43,8 +43,15 @@ export default function FTCLanding() {
 
   if (loading || !content) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-gray-500">
-        Loading FTC content…
+      <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
+        <div className="text-center">
+          <img
+            src={`./welcomeSlide/Logo.png`} // or static /public/logo.png
+            alt="STEM Inspires"
+            className="w-32 mx-auto mb-6 animate-pulse"
+          />
+          <div className="text-white text-xl">Loading STEM Inspires…</div>
+        </div>
       </div>
     );
   }

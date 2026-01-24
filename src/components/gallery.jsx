@@ -1,35 +1,16 @@
 // src/components/Gallery.jsx
-import React, { useEffect, useState } from "react";
+import React from "react";
 
 // Load backend URL from environment variable
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
-const Gallery = () => {
-  const [galleryImages, setGalleryImages] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchGallery = async () => {
-      try {
-        const res = await fetch(`${BACKEND_URL}/api/gallery`);
-        const data = await res.json();
-        setGalleryImages(data);
-      } catch (err) {
-        console.error("Error loading gallery:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchGallery();
-  }, []);
-
-  if (loading) {
-    return <div className="p-6 text-center text-gray-500">Loading gallery…</div>;
-  }
-
+const Gallery = ({ galleryImages = [] }) => {
   if (galleryImages.length === 0) {
-    return <div className="p-6 text-center text-gray-500">No images found in gallery.</div>;
+    return (
+      <div className="p-6 text-center text-gray-500">
+        No images found in gallery.
+      </div>
+    );
   }
 
   return (
@@ -38,7 +19,10 @@ const Gallery = () => {
       className="p-6 md:p-10 w-full flex flex-col items-center justify-center bg-gray-50"
     >
       {/* Heading */}
-      <h2 className="text-3xl md:mb-16 md:text-4xl font-serif font-semibold text-center mb-3 tracking-wide" style={{ color: "rgb(242, 30, 167)" }}>
+      <h2
+        className="text-3xl md:mb-16 md:text-4xl font-serif font-semibold text-center mb-3 tracking-wide"
+        style={{ color: "rgb(242, 30, 167)" }}
+      >
         Champions Gallery
       </h2>
 

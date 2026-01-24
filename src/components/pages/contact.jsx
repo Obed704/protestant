@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { gsap } from "gsap";
-import Navbar from "../Header.jsx";
+import Header from "../Header.jsx";           // ← changed from Navbar
 import Footer from "../Footer.jsx";
 import ChatBolt from "../ChatBolt.jsx";
 
@@ -138,7 +138,7 @@ export const FloatingSelect = ({ id, label, value, onChange, options = [] }) => 
       >
         <option value="" className="bg-gray-800 text-gray-500">Choose a subject</option>
         {options.map((opt) => (
-          <option key={opt} value={opt}  className="bg-gray-800 text-gray-200">
+          <option key={opt} value={opt} className="bg-gray-800 text-gray-200">
             {opt}
           </option>
         ))}
@@ -271,7 +271,7 @@ export const ContactForm = ({ backendUrl = BACKEND_URL }) => {
               onChange={handleChange}
             />
 
-            <FloatingSelect id="subject"  value={formData.subject} onChange={handleChange} options={SUBJECT_OPTIONS} />
+            <FloatingSelect id="subject" value={formData.subject} onChange={handleChange} options={SUBJECT_OPTIONS} />
           </>
         ) : (
           <div className="text-white px-4 py-3 bg-black/30 border border-gray-600 rounded-lg">Preset: {presetSubject}</div>
@@ -305,11 +305,45 @@ export const ContactForm = ({ backendUrl = BACKEND_URL }) => {
    ContactPage - full page
    ------------------------------*/
 const ContactPage = () => {
+  const [navbarSettings, setNavbarSettings] = useState(null);
+  const [loading, setLoading] = useState(true);
+  // const [error, setError] = useState(null);   // optional – can be added later
+
+  useEffect(() => {
+    let mounted = true;
+
+    const fetchNavbar = async () => {
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/navbar`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        const data = await res.json();
+
+        if (mounted) {
+          setNavbarSettings(data);
+          setLoading(false);
+        }
+      } catch (err) {
+        console.error("Failed to load navbar settings:", err);
+        // setError(err.message);   // optional
+        setLoading(false);
+      }
+    };
+
+    fetchNavbar();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   return (
     <>
-      <Navbar />
+      {/* Render Header with fetched settings – fallback to empty object if still loading */}
+      <Header fixed={true} settings={navbarSettings || {}} />
+
       <motion.section
-      style={{
+        style={{
           background: `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url(${BACKEND_URL}/contact/contact-bg.jpg) center/cover no-repeat`,
         }}
         initial={{ opacity: 0 }}
@@ -325,13 +359,15 @@ const ContactPage = () => {
         >
           <div className="bg-black/50 shadow-2xl rounded-2xl overflow-hidden border border-gray-800 p-8 md:p-12">
             <div className="text-center mb-8">
-              <motion.h1 
+              <motion.h1
                 className="text-5xl font-bold mb-4"
                 style={{ color: "rgb(23, 207, 220)" }}
               >
                 Contact Us
               </motion.h1>
-              <p className="text-gray-300 mt-2 text-lg">We'd love to hear from you — questions, partnerships, or volunteering.</p>
+              <p className="text-gray-300 mt-2 text-lg">
+                We'd love to hear from you — questions, partnerships, or volunteering.
+              </p>
             </div>
 
             <ContactForm />
@@ -341,7 +377,7 @@ const ContactPage = () => {
           <div className="bg-black/70 text-center px-6 py-4 border-t border-gray-800 mt-4 rounded-b-2xl">
             <p className="text-gray-400 text-sm">
               We reply within 24 hours. For urgent matters email:
-              <a 
+              <a
                 className="ml-1 font-medium hover:underline transition"
                 style={{ color: STEM_COLORS[1] }}
                 href="mailto:amelia@steminspires.tech"

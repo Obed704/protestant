@@ -1,37 +1,21 @@
 import React, { useRef, useState, useEffect } from "react";
 import { motion, useInView } from "framer-motion";
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
-
-const StatsSection = () => {
-  const [statsSettings, setStatsSettings] = useState({
-    stats: [],
-    backgroundColor: "bg-black",
-  });
+const StatsSection = ({ statsSettings = { stats: [], backgroundColor: "bg-black" } }) => {
   const [counts, setCounts] = useState([]);
   const sectionRef = useRef(null);
   const inView = useInView(sectionRef, { once: true, margin: "-50px" });
 
-  // ---------------- FETCH SETTINGS ----------------
+  // Initialize counts array once when statsSettings changes
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const res = await fetch(`${BACKEND_URL}/api/stats`);
-        const data = await res.json();
-        if (data) {
-          setStatsSettings(data);
-          setCounts(data.stats.map(() => 0));
-        }
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    fetchStats();
-  }, []);
+    if (statsSettings?.stats?.length) {
+      setCounts(statsSettings.stats.map(() => 0));
+    }
+  }, [statsSettings]);
 
-  // ---------------- ANIMATE COUNTS ----------------
+  // Animate counts when section enters viewport
   useEffect(() => {
-    if (!inView || !statsSettings.stats.length) return;
+    if (!inView || !statsSettings?.stats?.length || counts.length === 0) return;
 
     statsSettings.stats.forEach((stat, idx) => {
       const duration = 1500;
@@ -40,7 +24,7 @@ const StatsSection = () => {
       const animate = (currentTime) => {
         const elapsed = currentTime - startTime;
         const progress = Math.min(elapsed / duration, 1);
-        const value = Math.floor(progress * stat.target);
+        const value = Math.floor(progress * (stat.target || 0));
 
         setCounts((prev) => {
           const next = [...prev];
@@ -48,21 +32,24 @@ const StatsSection = () => {
           return next;
         });
 
-        if (progress < 1) requestAnimationFrame(animate);
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        }
       };
 
       requestAnimationFrame(animate);
     });
   }, [inView, statsSettings]);
 
-  // ---------------- RENDER ----------------
+  const bgClass = statsSettings.backgroundColor || "bg-black";
+
   return (
     <section
       ref={sectionRef}
-      className={`${statsSettings.backgroundColor || "bg-black"} py-20 font-sans text-white`}
+      className={`${bgClass} py-20 font-sans text-white`}
     >
       <div className="max-w-5xl mx-auto px-6 grid grid-cols-1 sm:grid-cols-3 text-center gap-12">
-        {statsSettings.stats.length ? (
+        {statsSettings.stats?.length > 0 ? (
           statsSettings.stats.map((stat, idx) => (
             <motion.div
               key={idx}
@@ -74,14 +61,18 @@ const StatsSection = () => {
                 style={{ color: stat.color || "white" }}
                 className="text-5xl font-extrabold"
               >
-                {counts[idx] || 0}
+                {counts[idx] ?? 0}
                 {stat.plus ? "+" : ""}
               </h3>
-              <p className="mt-3 text-lg font-medium text-gray-300">{stat.label}</p>
+              <p className="mt-3 text-lg font-medium text-gray-300">
+                {stat.label || "Statistic"}
+              </p>
             </motion.div>
           ))
         ) : (
-          <p className="text-white col-span-3 text-center">Loading stats...</p>
+          <div className="col-span-3 text-center py-12">
+            <p className="text-gray-400">No statistics available</p>
+          </div>
         )}
       </div>
     </section>

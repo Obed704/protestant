@@ -1,29 +1,18 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
-const Header = ({ fixed = true }) => {
+const Header = ({ fixed = true, settings }) => {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [settings, setSettings] = useState(null);
-  const [loading, setLoading] = useState(true);
 
-  // Fetch navbar settings from backend
-  useEffect(() => {
-    fetch(`${BACKEND_URL}/api/navbar`)
-      .then((res) => res.json())
-      .then((data) => {
-        setSettings(data);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, []);
-
-  if (loading) return null;
-  if (!settings) return null;
+  // If settings are not yet available → render nothing or a minimal placeholder
+  if (!settings) {
+    return null; // or you could return a skeleton nav bar if you prefer
+  }
 
   // Logo served from backend/public/logo
-  const logoSrc = `${BACKEND_URL}/logo/${settings.logoImage}`;
+  const logoSrc = `${BACKEND_URL}/logo/${settings.logoImage || "default-logo.png"}`;
 
   return (
     <nav
@@ -47,10 +36,8 @@ const Header = ({ fixed = true }) => {
 
         {settings.logoMode === "logo-with-text" && (
           <div className="text-center leading-[1] -mt-[8px]">
-            <span className=" text-sm font-bold text-[rgb(247,244,46)]">
-              STEM
-            </span>
-            <span className=" text-xs font-medium text-[rgb(23,207,220)]">
+            <span className="text-sm font-bold text-[rgb(247,244,46)]">STEM</span>
+            <span className="text-xs font-medium text-[rgb(23,207,220)]">
               Inspires
             </span>
           </div>
@@ -59,16 +46,16 @@ const Header = ({ fixed = true }) => {
 
       {/* ================= DESKTOP LINKS ================= */}
       <div className="hidden lg:flex gap-6 items-center">
-        {settings.links.map(({ name, link }) => (
+        {settings.links?.map(({ name, link }) => (
           <Link
             key={name}
             to={link}
-            className={`relative group pb-2 transition-colors duration-300 ${settings.textColor}`}
+            className={`relative group pb-2 transition-colors duration-300 ${settings.textColor || "text-white"}`}
           >
             {name}
             <span
               className="absolute bottom-0 left-0 w-0 h-[2px] transition-all duration-300 group-hover:w-full"
-              style={{ backgroundColor: settings.hoverColor }}
+              style={{ backgroundColor: settings.hoverColor || "#17cfdc" }}
             />
           </Link>
         ))}
@@ -90,17 +77,17 @@ const Header = ({ fixed = true }) => {
           menuOpen ? "translate-y-0" : "-translate-y-full"
         }`}
       >
-        {settings.links.map(({ name, link }) => (
+        {settings.links?.map(({ name, link }) => (
           <Link
             key={name}
             to={link}
             onClick={() => setMenuOpen(false)}
-            className={`relative group transition ${settings.textColor}`}
+            className={`relative group transition ${settings.textColor || "text-white"}`}
           >
             {name}
             <span
               className="absolute bottom-0 left-0 w-0 h-[2px] transition-all duration-300 group-hover:w-full"
-              style={{ backgroundColor: settings.hoverColor }}
+              style={{ backgroundColor: settings.hoverColor || "#17cfdc" }}
             />
           </Link>
         ))}

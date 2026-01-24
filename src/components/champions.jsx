@@ -1,53 +1,32 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
-const ChampionsSection = () => {
-  const [champions, setChampions] = useState([]);
+const ChampionsSection = ({ championsFromParent = [] }) => {
+  const champions = championsFromParent;
   const [showModal, setShowModal] = useState(false);
   const displayLimit = 3;
 
-  // Fetch champions from API
-  const fetchChampions = async () => {
-    try {
-      const res = await fetch(`${BACKEND_URL}/api/champions`);
-      if (!res.ok) throw new Error("Failed to fetch champions");
-      const data = await res.json();
+  // Sort champions by year descending, then by _id (done once when prop changes)
+  const sortedChampions = [...champions].sort((a, b) => {
+    const yearA = a.year || 0;
+    const yearB = b.year || 0;
+    if (yearB !== yearA) return yearB - yearA;
+    return b._id.localeCompare(a._id);
+  });
 
-      // Sort champions by year descending, then by creation time (_id)
-      const sortedData = data
-        .slice()
-        .sort((a, b) => {
-          const yearA = a.year || 0;
-          const yearB = b.year || 0;
-          if (yearB !== yearA) return yearB - yearA; // sort by year descending
-          // fallback to _id descending if year is same or missing
-          return b._id.localeCompare(a._id);
-        });
+  const formattedChampions = sortedChampions.map((champion) => ({
+    id: champion._id || champion.id,
+    name: champion.title || champion.name || "Unnamed Champion",
+    description: champion.description || "",
+    image: champion.image || "",
+    to: "/champions",
+  }));
 
-      const formattedData = sortedData.map((champion) => ({
-        id: champion._id,
-        name: champion.title,
-        description: champion.description,
-        image: champion.image,
-        to: "/champions",
-      }));
-
-      setChampions(formattedData);
-    } catch (err) {
-      console.error("Error fetching champions:", err);
-    }
-  };
-
-  // Initial fetch
-  useEffect(() => {
-    fetchChampions();
-  }, []);
-
-  const hasMore = champions.length > displayLimit;
-  const displayedChampions = champions.slice(0, displayLimit);
+  const hasMore = formattedChampions.length > displayLimit;
+  const displayedChampions = formattedChampions.slice(0, displayLimit);
 
   return (
     <section id="champions" className="py-16 bg-blue-100 overflow-hidden">
@@ -63,39 +42,47 @@ const ChampionsSection = () => {
           Champions in recent years
         </motion.h2>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
-          {displayedChampions.map((champion, index) => (
-            <motion.div
-              key={champion.id}
-              className="bg-white rounded-2xl shadow-lg overflow-hidden transition-transform hover:scale-105"
-              initial={{ opacity: 0, y: 60 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{
-                duration: 0.7,
-                delay: index * 0.2,
-                ease: "easeOut",
-              }}
-              viewport={{ once: true, amount: 0.3 }}
-            >
-              <img
-                src={`${BACKEND_URL}${champion.image}`}
-                alt={champion.name}
-                className="w-full h-48 object-cover"
-                loading="lazy"
-              />
-              <div className="p-6">
-                <h3 className="text-xl font-semibold mb-2"
-                style={{ color: "rgb(23, 207, 220)" }} >
-                  {champion.name}
-                </h3>
-                <p className="text-gray-600 mb-4">{champion.description}</p>
-              </div>
-              <div className="text-blue-400 text-2xl font-bold mb-2 px-4">
-                <Link to={champion.to}>more</Link>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+        {formattedChampions.length === 0 ? (
+          <div className="text-center py-12 text-gray-600">
+            <p>No champions available at the moment.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
+            {displayedChampions.map((champion, index) => (
+              <motion.div
+                key={champion.id}
+                className="bg-white rounded-2xl shadow-lg overflow-hidden transition-transform hover:scale-105"
+                initial={{ opacity: 0, y: 60 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{
+                  duration: 0.7,
+                  delay: index * 0.2,
+                  ease: "easeOut",
+                }}
+                viewport={{ once: true, amount: 0.3 }}
+              >
+                <img
+                  src={`${BACKEND_URL}${champion.image.startsWith("/") ? "" : "/"}${champion.image}`}
+                  alt={champion.name}
+                  className="w-full h-48 object-cover"
+                  loading="lazy"
+                />
+                <div className="p-6">
+                  <h3
+                    className="text-xl font-semibold mb-2"
+                    style={{ color: "rgb(23, 207, 220)" }}
+                  >
+                    {champion.name}
+                  </h3>
+                  <p className="text-gray-600 mb-4">{champion.description}</p>
+                </div>
+                <div className="text-blue-400 text-2xl font-bold mb-2 px-4">
+                  <Link to={champion.to}>more</Link>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
 
         {hasMore && (
           <motion.div
@@ -141,7 +128,7 @@ const ChampionsSection = () => {
                 </h3>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  {champions.map((champion, index) => (
+                  {formattedChampions.map((champion, index) => (
                     <motion.div
                       key={champion.id}
                       className="bg-gray-100 rounded-xl overflow-hidden shadow p-4 flex flex-col"
@@ -150,7 +137,7 @@ const ChampionsSection = () => {
                       transition={{ duration: 0.5, delay: index * 0.05 }}
                     >
                       <img
-                        src={`${BACKEND_URL}${champion.image}`}
+                        src={`${BACKEND_URL}${champion.image.startsWith("/") ? "" : "/"}${champion.image}`}
                         alt={champion.name}
                         className="w-full h-36 object-cover rounded-lg mb-4"
                         loading="lazy"

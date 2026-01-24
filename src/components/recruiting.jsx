@@ -1,29 +1,26 @@
-import React, { useEffect, useState } from "react";
+// recruiting.jsx   (or whatever the file name is)
+import React from "react";
 import { motion } from "framer-motion";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
-const RecruitingProcess = () => {
-  const [processSteps, setProcessSteps] = useState([]);
-
-  useEffect(() => {
-    const fetchSteps = async () => {
-      try {
-        const res = await fetch(`${BACKEND_URL}/api/process`);
-        const data = await res.json();
-        setProcessSteps(data);
-      } catch (error) {
-        console.error("Error fetching process steps:", error);
-      }
-    };
-    fetchSteps();
-  }, []);
-
-  // Animation variants
+const RecruitingProcess = ({ steps = [] }) => {
+  // Animation variants (kept exactly the same)
   const fadeUp = {
     hidden: { opacity: 0, y: 50 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
   };
+
+  // Optional: nice fallback when no data arrived
+  if (!steps || steps.length === 0) {
+    return (
+      <section className="bg-gray-200 py-16 px-6 text-center">
+        <p className="text-gray-600 text-lg">
+          No recruiting process steps available at the moment.
+        </p>
+      </section>
+    );
+  }
 
   return (
     <section className="bg-gray-200 py-12 px-4 sm:px-6 md:px-24 font-sans">
@@ -40,9 +37,9 @@ const RecruitingProcess = () => {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 sm:gap-12 md:gap-16 max-w-7xl mx-auto text-center">
-        {processSteps.map((step, index) => (
+        {steps.map((step, index) => (
           <motion.div
-            key={step._id}
+            key={step._id || index} // fallback to index if _id is missing
             className="flex flex-col items-center px-2 sm:px-4"
             variants={fadeUp}
             initial="hidden"
@@ -52,15 +49,19 @@ const RecruitingProcess = () => {
           >
             <img
               src={`${BACKEND_URL}${step.img}`}
-              alt={step.alt}
+              alt={step.alt || step.title || "Process step image"}
               className="w-36 h-36 sm:w-44 sm:h-44 md:w-48 md:h-48 rounded-full object-cover mb-6 sm:mb-8 shadow-lg transition-transform duration-300 hover:scale-105"
             />
-            <h3 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 text-gray-800">{step.title}</h3>
+            <h3 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 text-gray-800">
+              {step.title}
+            </h3>
             <p className="text-gray-600 leading-relaxed max-w-xs sm:max-w-sm whitespace-pre-line">
-              {step.description.split("\n").map((line, idx) => (
+              {step.description?.split("\n").map((line, idx) => (
                 <span
                   key={idx}
-                  className={line.includes("Why are they waiting?") ? step.highlight : ""}
+                  className={
+                    line.includes("Why are they waiting?") ? step.highlight || "" : ""
+                  }
                 >
                   {line}
                   <br />

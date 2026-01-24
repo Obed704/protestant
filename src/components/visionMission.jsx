@@ -1,7 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { motion } from "framer-motion";
-
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 // Define the exact colors you provided
 const STEM_COLORS = [
@@ -10,22 +8,7 @@ const STEM_COLORS = [
   "rgb(242, 30, 167)",   // Pink/Magenta - spare if needed
 ];
 
-const MissionVision = () => {
-  const [cards, setCards] = useState([]);
-
-  useEffect(() => {
-    const fetchCards = async () => {
-      try {
-        const res = await fetch(`${BACKEND_URL}/api/mission-vision`);
-        const data = await res.json();
-        setCards(data);
-      } catch (err) {
-        console.error("Error fetching mission/vision:", err);
-      }
-    };
-    fetchCards();
-  }, []);
-
+const MissionVision = ({ cards = [] }) => {
   // Render title with whole words colored (no splitting letters)
   const renderColoredTitle = (text) => {
     if (!text) return "Untitled";
@@ -52,11 +35,11 @@ const MissionVision = () => {
     });
   };
 
-  if (!cards.length) {
+  if (!cards?.length) {
     return (
       <section className="bg-black text-white py-16 px-6 md:px-20 text-center">
         <h2 className="text-4xl font-extrabold mb-6">Our Mission & Vision</h2>
-        <p>Loading...</p>
+        <p>No mission/vision content available at the moment.</p>
       </section>
     );
   }
@@ -80,32 +63,28 @@ const MissionVision = () => {
           // Determine shadow color based on title
           const isMission = card.title?.toLowerCase().includes("mission");
           const shadowColor = isMission ? STEM_COLORS[0] : STEM_COLORS[1];
-          
+
           // Convert RGB to RGBA for shadow effects
-          const shadowColorDark = shadowColor.replace('rgb', 'rgba').replace(')', ', 0.6)');
+          const shadowColorDark   = shadowColor.replace('rgb', 'rgba').replace(')', ', 0.6)');
           const shadowColorMedium = shadowColor.replace('rgb', 'rgba').replace(')', ', 0.4)');
-          const shadowColorLight = shadowColor.replace('rgb', 'rgba').replace(')', ', 0.2)');
+          const shadowColorLight  = shadowColor.replace('rgb', 'rgba').replace(')', ', 0.2)');
 
           return (
             <motion.div
-              key={card._id}
-              className="relative flex-1 h-full min-h-[360px] bg-gradient-to-br from-gray-800 to-gray-900 rounded-3xl p-10 
-                         border border-gray-700 flex flex-col justify-between overflow-hidden"
-              // Initial state - no colored shadows
+              key={card._id || index}
+              className="relative flex-1 h-full min-h-[360px] bg-gradient-to-br from-gray-800 to-gray-900 rounded-3xl p-10 border border-gray-700 flex flex-col justify-between overflow-hidden"
               style={{
                 boxShadow: `
                   0 4px 20px rgba(0, 0, 0, 0.3),
                   inset 0 1px 0 rgba(255, 255, 255, 0.1)
                 `,
               }}
-              // Hover state with animated shadows
               whileHover={{
                 boxShadow: [
                   `
                     0 4px 20px rgba(0, 0, 0, 0.3),
                     inset 0 1px 0 rgba(255, 255, 255, 0.1)
                   `,
-                 
                   `
                     0 4px 20px rgba(0, 0, 0, 0.3),
                     0 15px 40px -10px ${shadowColorLight},
@@ -133,14 +112,8 @@ const MissionVision = () => {
               {/* Animated Bottom Shadow */}
               <motion.div
                 className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none opacity-0"
-                whileHover={{
-                  opacity: [0, 0.4, 0.7, 1],
-                }}
-                transition={{
-                  duration: 1.2,
-                  ease: "ease",
-                  delay: 0.1
-                }}
+                whileHover={{ opacity: [0, 0.4, 0.7, 1] }}
+                transition={{ duration: 1.2, ease: "ease", delay: 0.1 }}
                 style={{
                   background: `linear-gradient(to top, ${shadowColor}, transparent)`,
                   borderRadius: '0 0 24px 24px',
@@ -151,14 +124,8 @@ const MissionVision = () => {
               {/* Animated Left Shadow */}
               <motion.div
                 className="absolute left-0 top-0 bottom-0 w-32 pointer-events-none opacity-0"
-                whileHover={{
-                  opacity: [0, 0.3, 0.5, 0.8],
-                }}
-                transition={{
-                  duration: 1.2,
-                  ease: "ease",
-                  delay: 0.2
-                }}
+                whileHover={{ opacity: [0, 0.3, 0.5, 0.8] }}
+                transition={{ duration: 1.2, ease: "ease", delay: 0.2 }}
                 style={{
                   background: `linear-gradient(to right, ${shadowColor}, transparent)`,
                   borderRadius: '24px 0 0 24px',
@@ -169,15 +136,8 @@ const MissionVision = () => {
               {/* Corner Glow Effect */}
               <motion.div
                 className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full pointer-events-none opacity-0"
-                whileHover={{
-                  opacity: [0.6],
-                  scale: [0.5],
-                }}
-                transition={{
-                  duration: 1,
-                  ease: "easeOut",
-                  delay: 0
-                }}
+                whileHover={{ opacity: [0.6], scale: [0.5] }}
+                transition={{ duration: 1, ease: "easeOut", delay: 0 }}
                 style={{
                   background: `radial-gradient(circle, ${shadowColor}80, transparent 70%)`,
                   filter: 'blur(50px)',
@@ -186,11 +146,10 @@ const MissionVision = () => {
 
               {/* Content */}
               <div className="relative z-10">
-                {/* Title with solid word color (no per-letter split) */}
                 <h3 className="text-2xl font-semibold mb-4">
                   {renderColoredTitle(card.title)}
                 </h3>
-                <p className="text-gray-300 leading-relaxed lg:leading-8 group-hover:text-gray-100 transition-colors duration-500 delay-200">
+                <p className="text-gray-300 leading-relaxed lg:leading-8 transition-colors duration-500 delay-200 group-hover:text-gray-100">
                   {card.description || "No description provided."}
                 </p>
               </div>
@@ -198,14 +157,8 @@ const MissionVision = () => {
               {/* Subtle Border Glow */}
               <motion.div
                 className="absolute inset-0 rounded-3xl pointer-events-none border-2 opacity-0"
-                whileHover={{
-                  opacity: [0, 0.3, 0.5],
-                }}
-                transition={{
-                  duration: 0.8,
-                  ease: "easeOut",
-                  delay: 0.4
-                }}
+                whileHover={{ opacity: [0, 0.3, 0.5] }}
+                transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
                 style={{
                   borderColor: shadowColor,
                   boxShadow: `inset 0 0 30px ${shadowColorLight}`,

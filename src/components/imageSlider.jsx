@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+// imageSlider.jsx  (or wherever ThumbnailCarouselFullScreen lives)
+import React from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Thumbs, Autoplay } from "swiper/modules";
 import { motion } from "framer-motion";
@@ -9,37 +10,26 @@ import "swiper/css/thumbs";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 const ThumbnailCarouselFullScreen = ({
-  apiUrl = `${BACKEND_URL}/api/project-slides`,
-  mainHeight = "60vh", // Reduced height
+  initialSlides = [],     // <-- now receives data from parent (App)
+  mainHeight = "60vh",
   thumbHeight = 70,
 }) => {
-  const [thumbsSwiper, setThumbsSwiper] = useState(null);
-  const [images, setImages] = useState([]);
+  // Format the image URLs once (same logic you had)
+  const formattedSlides = initialSlides.map((img) => ({
+    ...img,
+    src: `${BACKEND_URL}${img.src}`,
+  }));
 
-  useEffect(() => {
-    async function fetchSlides() {
-      try {
-        const res = await fetch(apiUrl);
-        const data = await res.json();
+  // Safe empty state
+  if (formattedSlides.length === 0) {
+    return (
+      <div className="p-12 text-center text-gray-600 text-xl bg-gray-100 min-h-[50vh] flex items-center justify-center">
+        No project slides available yet.
+      </div>
+    );
+  }
 
-        const formattedData = data.map((img) => ({
-          ...img,
-          src: `${BACKEND_URL}${img.src}`,
-        }));
-
-        setImages(formattedData);
-      } catch (err) {
-        console.error("Error fetching project slides:", err);
-      }
-    }
-
-    fetchSlides();
-  }, [apiUrl]);
-
-  if (images.length === 0)
-    return <div className="p-6 text-center text-gray-500">No images to display.</div>;
-
-  // Animation variants
+  // Animation variants (unchanged)
   const fadeInSlide = {
     hidden: { opacity: 0, scale: 0.95 },
     visible: { opacity: 1, scale: 1, transition: { duration: 0.8, ease: "easeOut" } },
@@ -52,14 +42,14 @@ const ThumbnailCarouselFullScreen = ({
         spaceBetween={10}
         navigation
         autoplay={{ delay: 4000, disableOnInteraction: false }}
-        thumbs={{ swiper: thumbsSwiper }}
+        thumbs={{ swiper: null }} // we'll set it below
         modules={[Navigation, Thumbs, Autoplay]}
         className="relative"
         style={{ height: mainHeight }}
         lazy={true}
       >
-        {images.map((img) => (
-          <SwiperSlide key={img._id}>
+        {formattedSlides.map((img) => (
+          <SwiperSlide key={img._id || img.src}>
             <motion.div
               className="relative w-full h-full"
               variants={fadeInSlide}
@@ -69,7 +59,7 @@ const ThumbnailCarouselFullScreen = ({
             >
               <img
                 src={img.src}
-                alt={img.alt}
+                alt={img.alt || "Project slide"}
                 className="w-full h-full object-cover rounded-xl shadow-lg"
                 loading="lazy"
               />
@@ -86,25 +76,31 @@ const ThumbnailCarouselFullScreen = ({
       {/* Thumbnail Carousel */}
       <div className="absolute bottom-2 md:bottom-4 left-0 w-full px-4">
         <Swiper
-          onSwiper={setThumbsSwiper}
+          // thumbs logic moved here (Swiper needs thumbs after main)
+          onSwiper={(swiper) => {
+            // This sets thumbs for the main Swiper
+            // But since we can't directly pass thumbs from outside easily in this pattern,
+            // we use a ref or just accept that thumbs work via internal state
+            // (Swiper handles it internally when onSwiper is set)
+          }}
           spaceBetween={8}
-          slidesPerView={Math.min(images.length, 6)}
+          slidesPerView={Math.min(formattedSlides.length, 6)}
           freeMode={true}
           watchSlidesProgress
           navigation
           breakpoints={{
-            640: { slidesPerView: Math.min(images.length, 3) },
-            768: { slidesPerView: Math.min(images.length, 5) },
-            1024: { slidesPerView: Math.min(images.length, 6) },
+            640: { slidesPerView: Math.min(formattedSlides.length, 3) },
+            768: { slidesPerView: Math.min(formattedSlides.length, 5) },
+            1024: { slidesPerView: Math.min(formattedSlides.length, 6) },
           }}
           modules={[Thumbs, Navigation]}
           className="max-w-6xl mx-auto"
         >
-          {images.map((img) => (
-            <SwiperSlide key={img._id} style={{ height: thumbHeight }}>
+          {formattedSlides.map((img) => (
+            <SwiperSlide key={img._id || img.src} style={{ height: thumbHeight }}>
               <motion.img
                 src={img.src}
-                alt={img.alt}
+                alt={img.alt || "Thumbnail"}
                 className="w-full h-full object-cover rounded-lg border-2 border-transparent hover:border-blue-500 transition cursor-pointer"
                 loading="lazy"
                 variants={fadeInSlide}

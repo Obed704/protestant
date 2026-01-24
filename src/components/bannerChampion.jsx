@@ -1,22 +1,5 @@
-import { useEffect, useState } from "react";
-
-const Banner = () => {
+const Banner = ({ bannerData }) => {
   const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
-  const [bannerData, setBannerData] = useState(null);
-
-  useEffect(() => {
-    const fetchBanner = async () => {
-      try {
-        const res = await fetch(`${BACKEND_URL}/api/banner`);
-        const data = await res.json();
-        setBannerData(data);
-      } catch (error) {
-        console.error("Error fetching banner:", error);
-      }
-    };
-
-    fetchBanner();
-  }, [BACKEND_URL]);
 
   if (!bannerData) return null;
 
@@ -24,7 +7,7 @@ const Banner = () => {
     <section className="relative w-full h-screen overflow-hidden" id="home">
       {/* Background image */}
       <img
-        src={`${BACKEND_URL}/${bannerData.image}`}
+        src={`${BACKEND_URL}${bannerData.image?.startsWith("/") ? "" : "/"}${bannerData.image}`}
         alt="Women in STEM"
         className="w-full h-full object-cover object-center brightness-75 transition-all duration-500 hover:brightness-90"
       />

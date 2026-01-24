@@ -1,13 +1,11 @@
 // TestimonialsCards.jsx
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from "swiper/modules";
 import { motion } from "framer-motion";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
-
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 const TestimonialCard = ({ t }) => (
   <motion.div
@@ -18,70 +16,46 @@ const TestimonialCard = ({ t }) => (
     viewport={{ once: true }}
     className="p-8 rounded-3xl bg-blue-950"
     style={{
-      border: `3px solid ${t.borderColor}`,
-      boxShadow: `0 4px 12px ${t.borderColor}33`,
+      border: `3px solid ${t.borderColor || "#ffffff"}`,
+      boxShadow: `0 4px 12px ${t.borderColor || "#ffffff"}33`,
     }}
   >
     <p
       style={{
-        fontFamily: t.font,
-        color: t.textColor,
+        fontFamily: t.font || "inherit",
+        color: t.textColor || "#ffffff",
         fontStyle: "italic",
         lineHeight: 1.6,
         fontSize: "1.1rem",
       }}
       className="mb-6"
     >
-      “{t.text}”
+      “{t.text || "No testimonial text provided"}”
     </p>
     <h3
       style={{
-        fontFamily: t.font,
-        color: t.textColor,
+        fontFamily: t.font || "inherit",
+        color: t.textColor || "#ffffff",
         fontSize: "1.25rem",
         fontWeight: 700,
       }}
     >
-      {t.name}
+      {t.name || "Anonymous"}
     </h3>
-    <p style={{ color: t.textColor, opacity: 0.9 }}>{t.role}</p>
+    <p style={{ color: t.textColor || "#ffffff", opacity: 0.9 }}>
+      {t.role || ""}
+    </p>
   </motion.div>
 );
 
-const TestimonialsCards = () => {
-  const [testimonials, setTestimonials] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchTestimonials = async () => {
-      try {
-        const res = await fetch(`${BACKEND_URL}/api/testimonials`);
-        if (!res.ok) throw new Error("Failed to fetch testimonials");
-
-        const data = await res.json();
-        setTestimonials(data);
-      } catch (err) {
-        console.error("Error fetching testimonials:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTestimonials();
-  }, []);
-
-  if (loading) {
-    return (
-      <section className="py-16 bg-blue-900 flex justify-center">
-        <div className="text-white">Loading…</div>
-      </section>
-    );
-  }
-
+const TestimonialsCards = ({ testimonials = [] }) => {
+  // No loading state anymore — parent is responsible for when to show this section
   if (testimonials.length === 0) {
     return (
-      <section className="py-16 bg-blue-900 flex justify-center">
-        <div className="text-white">No testimonials available.</div>
+      <section className="py-16 bg-blue-900 flex justify-center items-center min-h-[300px]">
+        <div className="text-white text-center">
+          <p>No testimonials available at the moment.</p>
+        </div>
       </section>
     );
   }
@@ -101,8 +75,7 @@ const TestimonialsCards = () => {
         What People Say About STEM Inspires
       </motion.h2>
 
-      {/* Desktop grid */}
-      {/* Desktop: if 3 or more → horizontal slider; if less → grid */}
+      {/* Desktop: slider if ≥ 3 items, otherwise simple grid */}
       {testimonials.length >= 3 ? (
         <div className="hidden lg:block w-full max-w-6xl px-6 relative">
           {/* Custom Navigation Buttons */}
@@ -110,14 +83,14 @@ const TestimonialsCards = () => {
             className="swiper-button-prev bg-white/60 text-black w-20 h-20 rounded-full 
                  flex items-center justify-center backdrop-blur-md 
                  absolute top-1/2 left-0 -translate-y-1/2 -translate-x-6 
-                 hover:bg-white/40 transition"
+                 hover:bg-white/40 transition z-10"
           ></div>
 
           <div
-            className="swiper-button-next bg-white/60 text-black w-20 h-16 rounded-full 
+            className="swiper-button-next bg-white/60 text-black w-20 h-20 rounded-full 
                  flex items-center justify-center backdrop-blur-md 
-                 absolute top-1/2 right-2 -translate-y-1/2 translate-x-6
-                 hover:bg-white/40 transition"
+                 absolute top-1/2 right-0 -translate-y-1/2 translate-x-6 
+                 hover:bg-white/40 transition z-10"
           ></div>
 
           <Swiper
@@ -132,21 +105,21 @@ const TestimonialsCards = () => {
             className="pb-12"
           >
             {testimonials.map((t) => (
-              <SwiperSlide key={t._id}>
+              <SwiperSlide key={t._id || `${t.name}-${t.text?.slice(0,20)}`}>
                 <TestimonialCard t={t} />
               </SwiperSlide>
             ))}
           </Swiper>
         </div>
       ) : (
-        <div className="hidden lg:grid grid-cols-3 gap-8 w-full max-w-6xl px-6">
+        <div className="hidden lg:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-6xl px-6">
           {testimonials.map((t) => (
-            <TestimonialCard key={t._id} t={t} />
+            <TestimonialCard key={t._id || `${t.name}-${t.text?.slice(0,20)}`} t={t} />
           ))}
         </div>
       )}
 
-      {/* Swiper on mobile/tablet */}
+      {/* Mobile / tablet: always slider */}
       <div className="w-full max-w-2xl px-6 lg:hidden">
         <Swiper
           modules={[Navigation, Pagination]}
@@ -157,7 +130,7 @@ const TestimonialsCards = () => {
           className="pb-12"
         >
           {testimonials.map((t) => (
-            <SwiperSlide key={t._id}>
+            <SwiperSlide key={t._id || `${t.name}-${t.text?.slice(0,20)}`}>
               <TestimonialCard t={t} />
             </SwiperSlide>
           ))}
