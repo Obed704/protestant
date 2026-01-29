@@ -287,9 +287,9 @@ const DownloadsPage = () => {
               <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-cyan-400 to-cyan-300 bg-clip-text text-transparent">
                 Download Files
               </h2>
-              <p className="text-gray-400 max-w-2xl mx-auto text-lg">
+              {/* <p className="text-gray-400 max-w-2xl mx-auto text-lg">
                 High-quality resources designed for professionals and enthusiasts
-              </p>
+              </p> */}
             </motion.div>
 
             {loadingDownloads ? (
