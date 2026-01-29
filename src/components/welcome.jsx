@@ -52,7 +52,7 @@ const HeroSection = ({ hero, slides }) => {
         <div className="absolute inset-0 bg-gradient-to-br from-gray-900 to-black" />
         <div className="relative z-10 text-center space-y-8">
           <motion.img
-            src={`${BACKEND_URL}/logo/default-logo.png`} // safer fallback
+            src={`${FRONTEND_URL}/welcomeSlide/Logo.png`} // safer fallback
             alt="STEM Inspires Logo"
             className="w-32 md:w-40 rounded-md mx-auto"
             initial={{ opacity: 0, scale: 0.8 }}
