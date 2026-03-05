@@ -258,10 +258,10 @@ const Header = () => {
             {/* Right side */}
             <div className="flex items-center gap-3">
               {/* Optional search (friendly) */}
-              <div className="hidden xl:flex items-center gap-2 px-3 py-2 rounded-full bg-white/60 border border-blue-100/50 shadow-sm">
+              {/* <div className="hidden xl:flex items-center gap-2 px-3 py-2 rounded-full bg-white/60 border border-blue-100/50 shadow-sm">
                 <FiSearch className="text-blue-600" />
                 <span className="text-sm text-gray-500">Search…</span>
-              </div>
+              </div> */}
 
               {/* Desktop Auth */}
               <div className="hidden lg:flex items-center">

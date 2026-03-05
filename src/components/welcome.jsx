@@ -246,14 +246,14 @@ const WelcomeLite = () => {
               )}
             </motion.a>
 
-            <a
+            {/* <a
               href="/home#services"
               className="inline-flex items-center justify-center px-8 py-3 rounded-full font-semibold
                          bg-white/5 border border-white/12 backdrop-blur
                          hover:bg-white/8 transition"
             >
               See service times
-            </a>
+            </a> */}
           </motion.div>
 
           {/* Footer note */}
