@@ -16,9 +16,9 @@ const ShortVideos = () => {
         </div>
 
         {/* Sidebar */}
-        <div className="order-1 md:order-1 w-full md:w-48 bg-gray-900 text-white">
+        {/* <div className="order-1 md:order-1 w-full md:w-48 bg-gray-900 text-white">
           <Sidebar />
-        </div>
+        </div> */}
       </div>
     </div>
   );

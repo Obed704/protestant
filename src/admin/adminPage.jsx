@@ -32,6 +32,7 @@ const links = [
   { name: "departments", icon: <FiUsers />, to: "/admin/update/departments" },
   { name: "Holiday", icon: <FiUsers />, to: "/admin/update/holiday" },
   { name: "Daly word", icon: <FiUsers />, to: "/admin-daily-word" },
+   { name: "commitees", icon: <FiUsers />, to: "/admin/committees" },
 ];
 
 export default function AdminUpdateLanding() {

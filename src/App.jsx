@@ -30,6 +30,13 @@ import AdminDepartments from "./admin/AdminDepartments.jsx";
 import AdminHoliday from "./admin/adminHoliday.jsx";
 import GoogleSuccess from "./pages/GoogleSuccessPage.jsx";
 import DailyPreachings from "./pages/dailyPreach.jsx";
+import MyBaptismClasses from "./pages/MyBaptismClasses.jsx";
+import ChatHome from "./pages/ChatHome.jsx";
+import NewChat from "./pages/NewChat.jsx";
+import ProfilePage from "./pages/ProfilePage.jsx";
+import CommitteePage from "./pages/CommitteePage.jsx";
+import AdminCommitteesPage from "./admin/AdminCommitteesPage.jsx";
+
 
 
 function App() {
@@ -38,6 +45,7 @@ function App() {
       <Router>
         <Routes>
           <Route path="/" element={<Welcome />} />
+          <Route path="/baptism/my-classes" element={<MyBaptismClasses />} />
           <Route path="/home" element={<Home />} />
           <Route path="/shorts" element={<ShortVideos />} />
           {/* match the URL you want */}
@@ -54,6 +62,13 @@ function App() {
           <Route path="/tube" element={<TubePage />} />
           <Route path="/google-success" element={<GoogleSuccess />} />
           <Route path="/daily-word" element={<DailyPreachings />} />
+          <Route path="/chat" element={<ChatHome />} />
+          <Route path="/chat/new" element={<NewChat />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          // ...
+<Route path="/committee" element={<CommitteePage />} />
+<Route path="/admin/committees" element={<AdminCommitteesPage />} />
+
 
           <Route
             path="/admin"

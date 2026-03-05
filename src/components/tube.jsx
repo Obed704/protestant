@@ -179,7 +179,7 @@ const GospelSongs = () => {
                   playerRef.current.seekTo(playerRef.current.getCurrentTime() - 10, true)
                 }
               >
-                <FaBackward /> 10s
+                <FaBackward /> obedddd
               </button>
               <button
                 className="p-2 bg-yellow-400 rounded hover:bg-yellow-300"
