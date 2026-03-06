@@ -30,10 +30,26 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
 const API_BASE_URL = import.meta.env.VITE_BASE_URL;
 const API_CHAT = `${API_BASE_URL}/api/chat`;
+const API_USERS = `${API_BASE_URL}/api/users`;
 
-/* ---------------- Small helpers ---------------- */
+/* ---------------- Helpers ---------------- */
 
-const idOf = (v) => (v && typeof v === "object" ? v._id || v.id : v);
+const strId = (v) => {
+  if (!v) return "";
+  if (typeof v === "string") return v;
+  if (typeof v === "number") return String(v);
+  if (typeof v === "object") {
+    const any = v._id || v.id || v.userId;
+    if (any) return strId(any);
+    try {
+      return String(v);
+    } catch {
+      return "";
+    }
+  }
+  return String(v);
+};
+
 const makeKey = (type, id) => `${type}:${String(id)}`;
 
 const loadJSON = (k, fallback) => {
@@ -45,23 +61,27 @@ const loadJSON = (k, fallback) => {
   }
 };
 
-const absUrl = (url, base) => {
-  if (!url) return "";
-  const s = String(url);
-  if (s.startsWith("http")) return s;
-  return `${base}${s.startsWith("/") ? s : `/${s}`}`;
-};
-
 const saveJSON = (k, v) => {
   try {
     localStorage.setItem(k, JSON.stringify(v));
   } catch {}
 };
 
+const absUrl = (url, base) => {
+  if (!url) return "";
+  const s = String(url).trim();
+  if (!s) return "";
+  if (s.startsWith("http")) return s;
+  return `${base}${s.startsWith("/") ? s : `/${s}`}`;
+};
+
 const formatTime = (date) => {
   if (!date) return "";
   try {
-    return new Date(date).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    return new Date(date).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   } catch {
     return "";
   }
@@ -75,24 +95,34 @@ const initialsOf = (nameOrEmail = "") => {
   return (parts[0][0] + parts[1][0]).toUpperCase();
 };
 
-const Avatar = ({ label, src }) => {
+// ProfilePage-style avatar (square, border, fallback initials)
+function Avatar({ label, src, size = 40 }) {
+  const [broken, setBroken] = useState(false);
   const initials = initialsOf(label);
 
-  if (src) {
-    return (
-      <div className="h-10 w-10 rounded-2xl overflow-hidden border bg-white shadow-sm">
-        <img src={src} alt={label || "avatar"} className="h-full w-full object-cover" />
-      </div>
-    );
-  }
+  const box = { width: size, height: size };
 
   return (
-    <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold shadow-sm">
-      {initials}
+    <div
+      className="rounded-2xl overflow-hidden border bg-gray-100 shrink-0"
+      style={box}
+      title={label || ""}
+    >
+      {src && !broken ? (
+        <img
+          src={src}
+          alt={label || "avatar"}
+          className="h-full w-full object-cover"
+          onError={() => setBroken(true)}
+        />
+      ) : (
+        <div className="h-full w-full flex items-center justify-center text-gray-400 font-bold">
+          {initials}
+        </div>
+      )}
     </div>
   );
-};
-
+}
 
 // tiny silent wav (browser may block autoplay until user interacts)
 const BEEP =
@@ -103,9 +133,7 @@ export default function ChatHome() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  // always string to avoid undefined/undefined comparisons
-  const myId = String(user?._id || user?.id || "");
-  const myName = user?.fullName || "Me";
+  const myId = strId(user?._id || user?.id);
 
   const authHeaders = useMemo(() => {
     if (!token) return {};
@@ -117,7 +145,7 @@ export default function ChatHome() {
   const [groups, setGroups] = useState([]);
   const [pendingInvites, setPendingInvites] = useState([]);
 
-  // show skeleton only first time (no flashing on send)
+  // show skeleton only on first load
   const [sidebarReady, setSidebarReady] = useState(false);
   const [sidebarRefreshing, setSidebarRefreshing] = useState(false);
   const [sidebarSearch, setSidebarSearch] = useState("");
@@ -134,7 +162,7 @@ export default function ChatHome() {
   /* ---------------- Forward modal ---------------- */
   const [forwardOpen, setForwardOpen] = useState(false);
   const [forwardMsg, setForwardMsg] = useState(null);
-  const [forwardTargets, setForwardTargets] = useState([]); // {type,id,title}
+  const [forwardTargets, setForwardTargets] = useState([]); // {type,id,title,avatarSrc?}
   const [targetSearch, setTargetSearch] = useState("");
 
   /* ---------------- Socket ---------------- */
@@ -144,29 +172,26 @@ export default function ChatHome() {
     activeRef.current = active;
   }, [active]);
 
-  // Keep latest lists in refs for socket handler (avoid re-binding)
   const dmsRef = useRef([]);
-  const groupsRef = useRef([]);
   useEffect(() => {
     dmsRef.current = dms;
   }, [dms]);
-  useEffect(() => {
-    groupsRef.current = groups;
-  }, [groups]);
 
   /* ---------------- Unread / Needs reply / Toast / Notifications ---------------- */
-  const [unread, setUnread] = useState(() => loadJSON("chat_unread_v2", {}));
-  // { "dm:ID": 3, "group:ID": 1 }
-
-  const [needsReply, setNeedsReply] = useState(() => loadJSON("chat_needsreply_v2", {}));
-  // { "dm:ID": true, "group:ID": true }
-
-  const [muted, setMuted] = useState(() => localStorage.getItem("chat_muted_v2") === "1");
-
-  const [toast, setToast] = useState(null); // { key, title, text, at, openTo:{type,id} }
+  const [unread, setUnread] = useState(() => loadJSON("chat_unread_v3", {}));
+  const [needsReply, setNeedsReply] = useState(() =>
+    loadJSON("chat_needsreply_v3", {})
+  );
+  const [muted, setMuted] = useState(
+    () => localStorage.getItem("chat_muted_v3") === "1"
+  );
+  const [toast, setToast] = useState(null); // { key, title, text, openTo:{type,id} }
 
   const [notifEnabled, setNotifEnabled] = useState(() => {
-    return typeof Notification !== "undefined" && Notification.permission === "granted";
+    return (
+      typeof Notification !== "undefined" &&
+      Notification.permission === "granted"
+    );
   });
 
   const beepRef = useRef(null);
@@ -174,9 +199,12 @@ export default function ChatHome() {
     beepRef.current = new Audio(BEEP);
   }, []);
 
-  useEffect(() => saveJSON("chat_unread_v2", unread), [unread]);
-  useEffect(() => saveJSON("chat_needsreply_v2", needsReply), [needsReply]);
-  useEffect(() => localStorage.setItem("chat_muted_v2", muted ? "1" : "0"), [muted]);
+  useEffect(() => saveJSON("chat_unread_v3", unread), [unread]);
+  useEffect(() => saveJSON("chat_needsreply_v3", needsReply), [needsReply]);
+  useEffect(
+    () => localStorage.setItem("chat_muted_v3", muted ? "1" : "0"),
+    [muted]
+  );
 
   const playBeep = useCallback(() => {
     if (muted) return;
@@ -242,16 +270,19 @@ export default function ChatHome() {
   }, []);
 
   const showToast = useCallback((payload) => {
-    setToast({ ...payload, at: Date.now() });
+    setToast(payload);
     const key = payload?.key;
     setTimeout(() => {
       setToast((t) => (t?.key === key ? null : t));
     }, 6000);
   }, []);
 
-  // Optional: put unread count in the tab title
+  // Tab title unread total
   useEffect(() => {
-    const total = Object.values(unread).reduce((a, b) => a + (Number(b) || 0), 0);
+    const total = Object.values(unread).reduce(
+      (a, b) => a + (Number(b) || 0),
+      0
+    );
     document.title = total > 0 ? `(${total}) Church Chat` : "Church Chat";
   }, [unread]);
 
@@ -264,7 +295,7 @@ export default function ChatHome() {
   /* ---------------- Sidebar preview bumping ---------------- */
   const bumpDmPreview = useCallback((conversationId, lastText, atISO) => {
     setDms((prev) => {
-      const idx = prev.findIndex((d) => String(d._id) === String(conversationId));
+      const idx = prev.findIndex((d) => strId(d._id) === strId(conversationId));
       if (idx === -1) return prev;
 
       const updated = {
@@ -281,7 +312,7 @@ export default function ChatHome() {
 
   const bumpGroupPreview = useCallback((groupId, lastText, atISO) => {
     setGroups((prev) => {
-      const idx = prev.findIndex((g) => String(g._id) === String(groupId));
+      const idx = prev.findIndex((g) => strId(g._id) === strId(groupId));
       if (idx === -1) return prev;
 
       const updated = {
@@ -296,7 +327,7 @@ export default function ChatHome() {
     });
   }, []);
 
-  /* ---------------- Load sidebar (silent refresh supported) ---------------- */
+  /* ---------------- Load sidebar ---------------- */
   const loadSidebar = useCallback(
     async ({ silent = false } = {}) => {
       if (!token || !myId) return;
@@ -315,12 +346,12 @@ export default function ChatHome() {
 
         const invites = allGroups.filter((g) =>
           (g.invites || []).some(
-            (i) => String(i.userId) === String(myId) && i.status === "pending"
+            (i) => strId(i.userId) === myId && i.status === "pending"
           )
         );
 
         const myGroups = allGroups.filter((g) =>
-          (g.members || []).some((m) => String(m.userId) === String(myId))
+          (g.members || []).some((m) => strId(m.userId) === myId)
         );
 
         setDms(dmList);
@@ -365,9 +396,10 @@ export default function ChatHome() {
 
       try {
         if (target.type === "dm") {
-          const res = await axios.get(`${API_CHAT}/dm/${target.id}/messages?limit=60`, {
-            headers: authHeaders,
-          });
+          const res = await axios.get(
+            `${API_CHAT}/dm/${target.id}/messages?limit=60`,
+            { headers: authHeaders }
+          );
           setMessages(res.data || []);
         } else {
           const res = await axios.get(
@@ -386,20 +418,19 @@ export default function ChatHome() {
     [token, authHeaders, scrollToBottom]
   );
 
-  const activeAvatarSrc =
-  active?.type === "dm"
-    ? absUrl(active?.meta?.otherUser?.avatarUrl, API_BASE_URL)
-    : "";
-
   /* ---------------- Open DM/Group ---------------- */
   const openDm = useCallback(
     (dm) => {
-      const title = dm?.otherUser?.fullName || dm?.otherUser?.email || "Direct chat";
+      const title =
+        dm?.otherUser?.fullName || dm?.otherUser?.email || "Direct chat";
       const target = { type: "dm", id: dm._id, title, meta: dm };
       setActive(target);
       setReplyTo(null);
       setText("");
-      clearUnread(makeKey("dm", dm._id)); // read clears unread
+
+      const k = makeKey("dm", dm._id);
+      clearUnread(k);
+
       loadMessages(target);
     },
     [clearUnread, loadMessages]
@@ -411,27 +442,34 @@ export default function ChatHome() {
       setActive(target);
       setReplyTo(null);
       setText("");
-      clearUnread(makeKey("group", g._id)); // read clears unread
+
+      const k = makeKey("group", g._id);
+      clearUnread(k);
+
       loadMessages(target);
     },
     [clearUnread, loadMessages]
   );
 
-  // If user navigated from /chat/new with only id, update active title when sidebar loads
+  // If opened DM via query param and meta was empty, fix title/meta when sidebar loads
   useEffect(() => {
     if (!active) return;
     if (active.type !== "dm") return;
-    const found = dms.find((d) => String(d._id) === String(active.id));
+    const found = dms.find((d) => strId(d._id) === strId(active.id));
     if (!found?.otherUser) return;
 
-    const betterTitle = found.otherUser.fullName || found.otherUser.email || active.title;
+    const betterTitle =
+      found.otherUser.fullName || found.otherUser.email || active.title;
+
     const needsUpdate =
       !active?.meta?.otherUser?.fullName &&
       !active?.meta?.otherUser?.email &&
       betterTitle !== active.title;
 
     if (needsUpdate) {
-      setActive((prev) => (prev ? { ...prev, title: betterTitle, meta: found } : prev));
+      setActive((prev) =>
+        prev ? { ...prev, title: betterTitle, meta: found } : prev
+      );
     }
   }, [active, dms]);
 
@@ -445,17 +483,20 @@ export default function ChatHome() {
     const groupToOpen = searchParams.get("group");
 
     if (dmToOpen) {
-      const dm = dms.find((d) => String(d._id) === String(dmToOpen)) || { _id: dmToOpen };
+      const dm = dms.find((d) => strId(d._id) === strId(dmToOpen)) || {
+        _id: dmToOpen,
+      };
       openDm(dm);
       navigate("/chat", { replace: true });
       return;
     }
 
     if (groupToOpen) {
-      const g = groups.find((x) => String(x._id) === String(groupToOpen)) || {
-        _id: groupToOpen,
-        name: "Group",
-      };
+      const g =
+        groups.find((x) => strId(x._id) === strId(groupToOpen)) || {
+          _id: groupToOpen,
+          name: "Group",
+        };
       openGroup(g);
       navigate("/chat", { replace: true });
     }
@@ -472,19 +513,44 @@ export default function ChatHome() {
     navigate,
   ]);
 
-  /* ---------------- Socket connect + message handling ---------------- */
+  /* ---------------- Users directory (for group sender avatars) ---------------- */
+  const [usersById, setUsersById] = useState({});
+
+  const loadUserDirectory = useCallback(async () => {
+    if (!token) return;
+    if (Object.keys(usersById).length > 0) return;
+
+    try {
+      const res = await axios.get(`${API_USERS}?search=`, {
+        headers: authHeaders,
+      });
+      const list = res.data || [];
+      const map = {};
+      for (const u of list) {
+        const id = strId(u?._id || u?.id);
+        if (id) map[id] = u;
+      }
+      setUsersById(map);
+    } catch {
+      // ignore (fallback initials will show)
+    }
+  }, [token, authHeaders, usersById]);
+
+  useEffect(() => {
+    if (active?.type === "group") loadUserDirectory();
+  }, [active?.type, loadUserDirectory]);
+
+  /* ---------------- Socket ---------------- */
   useEffect(() => {
     if (!token || authLoading) return;
 
     const s = createSocket(API_BASE_URL, token);
     socketRef.current = s;
 
-    s.on("connect", () => {
-      s.emit("rooms:refresh");
-    });
+    s.on("connect", () => s.emit("rooms:refresh"));
 
     const onNewMessage = (msg) => {
-      // update previews (no sidebar fetch)
+      // Update previews (no reload)
       if (msg?.targetType === "dm" && msg?.conversationId) {
         bumpDmPreview(msg.conversationId, msg.text, msg.createdAt);
       }
@@ -498,36 +564,34 @@ export default function ChatHome() {
         a &&
         ((a.type === "dm" &&
           msg.targetType === "dm" &&
-          String(msg.conversationId) === String(a.id)) ||
+          strId(msg.conversationId) === strId(a.id)) ||
           (a.type === "group" &&
             msg.targetType === "group" &&
-            String(msg.groupId) === String(a.id)));
+            strId(msg.groupId) === strId(a.id)));
 
-      const sender = idOf(msg?.senderId);
-      const incoming = !!sender && !!myId && String(sender) !== String(myId);
+      const senderId = strId(msg?.senderId);
+      const incoming = !!senderId && !!myId && senderId !== myId;
 
       const key =
         msg.targetType === "dm"
           ? makeKey("dm", msg.conversationId)
           : makeKey("group", msg.groupId);
 
-      // If active chat: append + mark read (clear unread only)
+      // Active chat: append + clear unread; mark needsReply only for incoming
       if (isActive) {
         setMessages((prev) => {
-          if (prev.some((m) => String(m._id) === String(msg._id))) return prev;
+          if (prev.some((m) => strId(m._id) === strId(msg._id))) return prev;
           return [...prev, msg];
         });
 
-        clearUnread(key); // reading clears unread
-
-        // If it's an incoming message while you are watching this chat, it still "needs reply"
+        clearUnread(key);
         if (incoming) markNeedsReply(key);
 
         scrollToBottom();
         return;
       }
 
-      // Not active: only count unread for incoming messages
+      // Not active: only for incoming
       if (incoming) {
         bumpUnread(key);
         markNeedsReply(key);
@@ -548,9 +612,11 @@ export default function ChatHome() {
         pushBrowserNotification(msg.senderName || "New message", msg.text, openTo);
       }
 
-      // If a DM arrives for a convo not in list (someone started one), silently refresh
+      // DM not in list yet → refresh once
       if (msg.targetType === "dm" && msg.conversationId) {
-        const known = dmsRef.current.some((d) => String(d._id) === String(msg.conversationId));
+        const known = dmsRef.current.some(
+          (d) => strId(d._id) === strId(msg.conversationId)
+        );
         if (!known) loadSidebar({ silent: true });
       }
     };
@@ -585,7 +651,7 @@ export default function ChatHome() {
     scrollToBottom,
   ]);
 
-  /* ---------------- Send message (no sidebar reload) ---------------- */
+  /* ---------------- Send (no sidebar reload) ---------------- */
   const send = useCallback(async () => {
     if (!token) return alert("Login required");
     if (!active) return;
@@ -613,19 +679,19 @@ export default function ChatHome() {
 
       const msg = res.data;
 
-      // append (dedupe if socket also delivers)
+      // Append (dedupe if socket also delivers)
       setMessages((prev) => {
-        if (prev.some((m) => String(m._id) === String(msg._id))) return prev;
+        if (prev.some((m) => strId(m._id) === strId(msg._id))) return prev;
         return [...prev, msg];
       });
 
-      // update previews locally
+      // Preview bump
       if (active.type === "dm") bumpDmPreview(active.id, msg.text, msg.createdAt);
-      if (active.type === "group") bumpGroupPreview(active.id, msg.text, msg.createdAt);
+      if (active.type === "group")
+        bumpGroupPreview(active.id, msg.text, msg.createdAt);
 
-      // sending a message means "answered"
-      const k = makeKey(active.type, active.id);
-      clearNeedsReply(k);
+      // Sending means "answered"
+      clearNeedsReply(makeKey(active.type, active.id));
 
       setText("");
       setReplyTo(null);
@@ -648,7 +714,11 @@ export default function ChatHome() {
   /* ---------------- Invites ---------------- */
   const acceptInvite = async (groupId) => {
     try {
-      await axios.post(`${API_CHAT}/groups/${groupId}/invites/accept`, {}, { headers: authHeaders });
+      await axios.post(
+        `${API_CHAT}/groups/${groupId}/invites/accept`,
+        {},
+        { headers: authHeaders }
+      );
       await loadSidebar({ silent: true });
       socketRef.current?.emit("rooms:refresh");
     } catch (e) {
@@ -658,7 +728,11 @@ export default function ChatHome() {
 
   const declineInvite = async (groupId) => {
     try {
-      await axios.post(`${API_CHAT}/groups/${groupId}/invites/decline`, {}, { headers: authHeaders });
+      await axios.post(
+        `${API_CHAT}/groups/${groupId}/invites/decline`,
+        {},
+        { headers: authHeaders }
+      );
       await loadSidebar({ silent: true });
     } catch (e) {
       alert(e.response?.data?.message || "Decline failed");
@@ -677,8 +751,13 @@ export default function ChatHome() {
 
   const toggleTarget = (t) => {
     setForwardTargets((prev) => {
-      const exists = prev.some((x) => x.type === t.type && String(x.id) === String(t.id));
-      if (exists) return prev.filter((x) => !(x.type === t.type && String(x.id) === String(t.id)));
+      const exists = prev.some(
+        (x) => x.type === t.type && strId(x.id) === strId(t.id)
+      );
+      if (exists)
+        return prev.filter(
+          (x) => !(x.type === t.type && strId(x.id) === strId(t.id))
+        );
       return [...prev, t];
     });
   };
@@ -688,11 +767,17 @@ export default function ChatHome() {
     if (!forwardTargets.length) return alert("Select at least 1 target");
 
     const targets = forwardTargets.map((t) =>
-      t.type === "dm" ? { type: "dm", conversationId: t.id } : { type: "group", groupId: t.id }
+      t.type === "dm"
+        ? { type: "dm", conversationId: t.id }
+        : { type: "group", groupId: t.id }
     );
 
     try {
-      await axios.post(`${API_CHAT}/forward`, { messageId: forwardMsg._id, targets }, { headers: authHeaders });
+      await axios.post(
+        `${API_CHAT}/forward`,
+        { messageId: forwardMsg._id, targets },
+        { headers: authHeaders }
+      );
       setForwardOpen(false);
       setForwardMsg(null);
       setForwardTargets([]);
@@ -707,10 +792,17 @@ export default function ChatHome() {
       type: "dm",
       id: d._id,
       title: d?.otherUser?.fullName || d?.otherUser?.email || "Direct chat",
+      avatarSrc: absUrl(d?.otherUser?.avatarUrl, API_BASE_URL),
     }));
-    const groupItems = groups.map((g) => ({ type: "group", id: g._id, title: g.name }));
-    const all = [...dmItems, ...groupItems];
 
+    const groupItems = groups.map((g) => ({
+      type: "group",
+      id: g._id,
+      title: g.name,
+      avatarSrc: "",
+    }));
+
+    const all = [...dmItems, ...groupItems];
     const s = targetSearch.toLowerCase().trim();
     if (!s) return all;
     return all.filter((x) => x.title.toLowerCase().includes(s));
@@ -732,7 +824,7 @@ export default function ChatHome() {
     });
   }, [dms, sidebarSearch]);
 
-  /* ---------------- UI states ---------------- */
+  /* ---------------- UI guards ---------------- */
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-50 to-white">
@@ -747,7 +839,9 @@ export default function ChatHome() {
         <EnhancedHeader />
         <div className="max-w-4xl mx-auto px-4 py-12">
           <div className="bg-white rounded-3xl shadow-lg border p-10 text-center">
-            <h1 className="text-2xl font-bold text-gray-900">Chat is for members only</h1>
+            <h1 className="text-2xl font-bold text-gray-900">
+              Chat is for members only
+            </h1>
             <p className="text-gray-600 mt-2">Please login to use messages.</p>
             <Link
               to="/login"
@@ -763,10 +857,22 @@ export default function ChatHome() {
   }
 
   const activeSubtitle = active?.type === "group" ? "Group chat" : "Private chat";
+  const activeTitle =
+    active?.title || (active?.type === "group" ? "Group" : "Direct chat");
+
   const activeAvatarLabel =
     active?.type === "group"
-      ? active?.title
-      : active?.meta?.otherUser?.fullName || active?.meta?.otherUser?.email || active?.title;
+      ? activeTitle
+      : active?.meta?.otherUser?.fullName ||
+        active?.meta?.otherUser?.email ||
+        activeTitle;
+
+  const activeAvatarSrc =
+    active?.type === "dm"
+      ? absUrl(active?.meta?.otherUser?.avatarUrl, API_BASE_URL)
+      : "";
+
+  const myAvatarSrc = absUrl(user?.avatarUrl, API_BASE_URL);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
@@ -794,7 +900,10 @@ export default function ChatHome() {
               className="inline-flex items-center gap-2 px-3 py-2 bg-white border rounded-2xl hover:bg-gray-50"
               title="Refresh"
             >
-              <RefreshCw size={16} className={sidebarRefreshing ? "animate-spin" : ""} />
+              <RefreshCw
+                size={16}
+                className={sidebarRefreshing ? "animate-spin" : ""}
+              />
               <span className="text-sm">Refresh</span>
             </button>
 
@@ -848,8 +957,12 @@ export default function ChatHome() {
                           <div className="flex items-start gap-3">
                             <Avatar label={g.name} />
                             <div className="flex-1">
-                              <div className="font-semibold text-gray-900">{g.name}</div>
-                              <div className="text-xs text-gray-500 mt-1">You’ve been invited</div>
+                              <div className="font-semibold text-gray-900">
+                                {g.name}
+                              </div>
+                              <div className="text-xs text-gray-500 mt-1">
+                                You’ve been invited
+                              </div>
                               <div className="flex gap-2 mt-3">
                                 <button
                                   onClick={() => acceptInvite(g._id)}
@@ -874,10 +987,14 @@ export default function ChatHome() {
 
                 {/* Groups */}
                 <div>
-                  <div className="text-xs font-semibold text-gray-500 px-2 mb-2">GROUPS</div>
+                  <div className="text-xs font-semibold text-gray-500 px-2 mb-2">
+                    GROUPS
+                  </div>
                   <div className="space-y-2">
                     {filteredGroups.length === 0 ? (
-                      <div className="px-2 text-sm text-gray-500">No groups.</div>
+                      <div className="px-2 text-sm text-gray-500">
+                        No groups.
+                      </div>
                     ) : (
                       filteredGroups.map((g) => {
                         const gKey = makeKey("group", g._id);
@@ -889,7 +1006,8 @@ export default function ChatHome() {
                             key={g._id}
                             onClick={() => openGroup(g)}
                             className={`w-full text-left p-3 rounded-2xl border transition hover:bg-blue-50 ${
-                              active?.type === "group" && String(active.id) === String(g._id)
+                              active?.type === "group" &&
+                              strId(active.id) === strId(g._id)
                                 ? "bg-blue-50 border-blue-200"
                                 : "bg-white border-gray-200"
                             }`}
@@ -950,24 +1068,29 @@ export default function ChatHome() {
                         const dmNeeds = !!needsReply[dmKey];
 
                         const title =
-                          d?.otherUser?.fullName || d?.otherUser?.email || "Direct chat";
+                          d?.otherUser?.fullName ||
+                          d?.otherUser?.email ||
+                          "Direct chat";
+
                         const sub = d?.otherUser?.email || "";
+                        const avatarSrc = absUrl(
+                          d?.otherUser?.avatarUrl,
+                          API_BASE_URL
+                        );
 
                         return (
                           <button
                             key={d._id}
                             onClick={() => openDm(d)}
                             className={`w-full text-left p-3 rounded-2xl border transition hover:bg-blue-50 ${
-                              active?.type === "dm" && String(active.id) === String(d._id)
+                              active?.type === "dm" &&
+                              strId(active.id) === strId(d._id)
                                 ? "bg-blue-50 border-blue-200"
                                 : "bg-white border-gray-200"
                             }`}
                           >
                             <div className="flex items-center gap-3">
-                           <Avatar
-  label={title}
-  src={absUrl(d?.otherUser?.avatarUrl, API_BASE_URL)}
-/>
+                              <Avatar label={title} src={avatarSrc} />
 
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center justify-between gap-2">
@@ -995,7 +1118,9 @@ export default function ChatHome() {
                                 </div>
 
                                 {sub ? (
-                                  <div className="text-xs text-gray-500 truncate mt-0.5">{sub}</div>
+                                  <div className="text-xs text-gray-500 truncate mt-0.5">
+                                    {sub}
+                                  </div>
                                 ) : null}
 
                                 <div className="text-sm text-gray-500 truncate mt-1">
@@ -1021,7 +1146,9 @@ export default function ChatHome() {
                   <div className="mx-auto h-14 w-14 rounded-3xl bg-blue-50 flex items-center justify-center">
                     <MessageCircle className="text-blue-600" />
                   </div>
-                  <div className="mt-4 font-semibold text-gray-800">Select a chat</div>
+                  <div className="mt-4 font-semibold text-gray-800">
+                    Select a chat
+                  </div>
                   <div className="text-sm text-gray-500 mt-1">
                     Open a group or a DM to start chatting.
                   </div>
@@ -1031,20 +1158,28 @@ export default function ChatHome() {
               <>
                 {/* Header */}
                 <div className="p-4 border-b bg-gradient-to-b from-white to-gray-50 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
                     <button
                       className="lg:hidden p-2 rounded-2xl hover:bg-gray-100"
                       onClick={() => setActive(null)}
+                      title="Back"
                     >
                       <ArrowLeft size={18} />
                     </button>
-                    
 
-                    <Avatar label={activeAvatarLabel} src={activeAvatarSrc} />
+                    <Avatar
+                      label={activeAvatarLabel}
+                      src={activeAvatarSrc}
+                      size={40}
+                    />
 
                     <div className="min-w-0">
-                      <div className="font-bold text-gray-900 truncate">{active.title}</div>
-                      <div className="text-xs text-gray-500">{activeSubtitle}</div>
+                      <div className="font-bold text-gray-900 truncate">
+                        {activeTitle}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {activeSubtitle}
+                      </div>
                     </div>
                   </div>
 
@@ -1068,14 +1203,36 @@ export default function ChatHome() {
                   ) : (
                     <div className="space-y-3">
                       {messages.map((m) => {
-                        const sender = idOf(m.senderId);
-                        const mine = !!sender && !!myId && String(sender) === String(myId);
+                        const senderId = strId(m?.senderId);
+                        const mine = !!senderId && !!myId && senderId === myId;
+
+                        const incomingAvatarSrc =
+                          active.type === "dm"
+                            ? activeAvatarSrc
+                            : absUrl(usersById[senderId]?.avatarUrl, API_BASE_URL);
+
+                        const incomingLabel =
+                          active.type === "dm"
+                            ? activeAvatarLabel
+                            : m.senderName || "User";
 
                         return (
                           <div
                             key={m._id}
-                            className={`flex ${mine ? "justify-end" : "justify-start"}`}
+                            className={`flex items-end gap-2 ${
+                              mine ? "justify-end" : "justify-start"
+                            }`}
                           >
+                            {/* LEFT avatar for incoming */}
+                            {!mine && (
+                              <Avatar
+                                size={32}
+                                label={incomingLabel}
+                                src={incomingAvatarSrc}
+                              />
+                            )}
+
+                            {/* Bubble */}
                             <div
                               className={`max-w-[78%] rounded-3xl px-4 py-3 border shadow-sm ${
                                 mine
@@ -1089,7 +1246,8 @@ export default function ChatHome() {
                                     mine ? "text-white/80" : "text-gray-500"
                                   }`}
                                 >
-                                  Forwarded • {m.forwardedFrom?.fromUserName || "Unknown"}
+                                  Forwarded •{" "}
+                                  {m.forwardedFrom?.fromUserName || "Unknown"}
                                 </div>
                               )}
 
@@ -1142,6 +1300,15 @@ export default function ChatHome() {
                                 </div>
                               </div>
                             </div>
+
+                            {/* RIGHT avatar for my messages (optional) */}
+                            {mine && (
+                              <Avatar
+                                size={32}
+                                label={user?.fullName || "Me"}
+                                src={myAvatarSrc}
+                              />
+                            )}
                           </div>
                         );
                       })}
@@ -1154,8 +1321,9 @@ export default function ChatHome() {
                 {replyTo && (
                   <div className="px-4 py-3 border-t bg-blue-50 flex items-center justify-between gap-3">
                     <div className="text-sm text-blue-900 truncate">
-                      Replying to: <span className="font-semibold">{replyTo.senderName}</span> —{" "}
-                      <span className="opacity-80">{replyTo.text}</span>
+                      Replying to:{" "}
+                      <span className="font-semibold">{replyTo.senderName}</span>{" "}
+                      — <span className="opacity-80">{replyTo.text}</span>
                     </div>
                     <button
                       onClick={() => setReplyTo(null)}
@@ -1202,13 +1370,15 @@ export default function ChatHome() {
         </div>
       </div>
 
-      {/* Mini message player (toast) */}
+      {/* Toast */}
       {toast && (
         <div className="fixed bottom-6 right-6 z-[9999] w-[360px] max-w-[92vw]">
           <div className="bg-white border shadow-xl rounded-3xl overflow-hidden">
             <div className="p-3 border-b flex items-center justify-between">
               <div className="min-w-0">
-                <div className="text-sm font-bold text-gray-900 truncate">{toast.title}</div>
+                <div className="text-sm font-bold text-gray-900 truncate">
+                  {toast.title}
+                </div>
                 <div className="text-xs text-gray-500">Incoming message</div>
               </div>
 
@@ -1222,13 +1392,17 @@ export default function ChatHome() {
             </div>
 
             <div className="p-3">
-              <div className="text-sm text-gray-800 line-clamp-3">{toast.text}</div>
+              <div className="text-sm text-gray-800 max-h-[72px] overflow-hidden">
+                {toast.text}
+              </div>
 
               <div className="mt-3 flex items-center gap-2">
                 <button
                   onClick={() => {
-                    if (toast.openTo?.type === "dm") navigate(`/chat?dm=${toast.openTo.id}`);
-                    if (toast.openTo?.type === "group") navigate(`/chat?group=${toast.openTo.id}`);
+                    if (toast.openTo?.type === "dm")
+                      navigate(`/chat?dm=${toast.openTo.id}`);
+                    if (toast.openTo?.type === "group")
+                      navigate(`/chat?group=${toast.openTo.id}`);
                     setToast(null);
                   }}
                   className="flex-1 px-4 py-2 rounded-2xl bg-blue-600 text-white hover:bg-blue-700"
@@ -1304,23 +1478,34 @@ export default function ChatHome() {
                 ) : (
                   forwardList.map((t) => {
                     const selected = forwardTargets.some(
-                      (x) => x.type === t.type && String(x.id) === String(t.id)
+                      (x) => x.type === t.type && strId(x.id) === strId(t.id)
                     );
+
                     return (
                       <button
                         key={`${t.type}:${t.id}`}
                         onClick={() => toggleTarget(t)}
                         className={`w-full text-left border rounded-2xl p-3 hover:bg-blue-50 transition flex items-center justify-between ${
-                          selected ? "border-blue-400 bg-blue-50" : "border-gray-200"
+                          selected
+                            ? "border-blue-400 bg-blue-50"
+                            : "border-gray-200"
                         }`}
                       >
-                        <div>
-                          <div className="font-semibold text-gray-900">
-                            {t.title}{" "}<Avatar label={activeAvatarLabel} src={activeAvatarSrc} />
-                            <span className="text-xs text-gray-500">({t.type})</span>
+                        <div className="flex items-center gap-3 min-w-0">
+                          <Avatar label={t.title} src={t.avatarSrc} />
+                          <div className="min-w-0">
+                            <div className="font-semibold text-gray-900 truncate">
+                              {t.title}{" "}
+                              <span className="text-xs text-gray-500">
+                                ({t.type})
+                              </span>
+                            </div>
                           </div>
                         </div>
-                        {selected && <CheckCircle className="text-blue-600" size={18} />}
+
+                        {selected && (
+                          <CheckCircle className="text-blue-600" size={18} />
+                        )}
                       </button>
                     );
                   })
@@ -1338,7 +1523,7 @@ export default function ChatHome() {
         </div>
       )}
 
-     
+      <Footer />
     </div>
   );
 }

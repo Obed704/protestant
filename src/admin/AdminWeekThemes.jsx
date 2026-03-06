@@ -1,14 +1,33 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
+import { AuthContext } from "../context/authContext.jsx";
 
-// Use your existing BASE_URL from .env → exposed with VITE_ prefix for frontend
 const API_BASE_URL = import.meta.env.VITE_BASE_URL;
 const API_ENDPOINT = `${API_BASE_URL}/api/weeks`;
 
+const toDateInputValue = (v) => {
+  if (!v) return "";
+  const d = new Date(v);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toISOString().slice(0, 10); // YYYY-MM-DD
+};
+
 export default function AdminWeekThemes() {
+  const { token: ctxToken } = useContext(AuthContext) || {};
+  const token = ctxToken || localStorage.getItem("token");
+
+  const authHeaders = token
+    ? {
+        Authorization: `Bearer ${token}`,
+        token,
+        "x-access-token": token,
+      }
+    : {};
+
   const [weeks, setWeeks] = useState([]);
-  const [editingIndex, setEditingIndex] = useState(null);
+  const [editingId, setEditingId] = useState(null);
+
   const [form, setForm] = useState({
     weekNo: "",
     name: "",
@@ -18,128 +37,52 @@ export default function AdminWeekThemes() {
     purpose: "",
     plans: "",
   });
+
   const [loading, setLoading] = useState(true);
 
-  // Fetch weeks safely from backend
-  useEffect(() => {
-    const fetchWeeks = async () => {
-      try {
-        setLoading(true);
-        const res = await axios.get(API_ENDPOINT);
+  const fetchWeeks = async () => {
+    try {
+      setLoading(true);
+      const res = await axios.get(API_ENDPOINT, { headers: authHeaders });
 
-        // Safely extract array from any response structure
-        let weeksArray = [];
-
-        if (res.data) {
-          if (Array.isArray(res.data)) {
-            weeksArray = res.data;
-          } else if (Array.isArray(res.data.weeks)) {
-            weeksArray = res.data.weeks;
-          } else if (Array.isArray(res.data.data)) {
-            weeksArray = res.data.data;
-          }
-        }
-
-        setWeeks(weeksArray);
-      } catch (err) {
-        console.error("Error fetching weeks:", err);
-        setWeeks([]);
-        alert("Failed to load weeks. Check console.");
-      } finally {
-        setLoading(false);
+      let weeksArray = [];
+      if (res.data) {
+        if (Array.isArray(res.data)) weeksArray = res.data;
+        else if (Array.isArray(res.data.weeks)) weeksArray = res.data.weeks;
+        else if (Array.isArray(res.data.data)) weeksArray = res.data.data;
       }
-    };
 
+      setWeeks(weeksArray);
+    } catch (err) {
+      console.error("Error fetching weeks:", err?.response?.data || err);
+      setWeeks([]);
+      alert(err.response?.data?.message || "Failed to load weeks. Check console.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchWeeks();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Handle input changes
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setForm((p) => ({ ...p, [e.target.name]: e.target.value }));
   };
 
-  // Add new week
-  const handleAdd = async () => {
-    const newWeek = {
-      ...form,
-      weekNo: Number(form.weekNo),
-      plans: form.plans
-        .split("\n")
-        .map((p) => p.trim())
-        .filter((p) => p !== ""),
-    };
-
-    try {
-      const res = await axios.post(API_ENDPOINT, newWeek);
-      setWeeks([...weeks, res.data]); // Use response from server
-      alert("Week added successfully!");
-    } catch (err) {
-      console.error("Error adding week:", err);
-      alert("Failed to add week.");
-      // Still add locally if backend fails (optional fallback)
-      setWeeks([...weeks, newWeek]);
-    }
-
-    resetForm();
-  };
-
-  // Update existing week
-  const handleUpdate = async () => {
-    const updatedWeek = {
-      ...form,
-      weekNo: Number(form.weekNo),
-      plans: form.plans
-        .split("\n")
-        .map((p) => p.trim())
-        .filter((p) => p !== ""),
-    };
-
-    try {
-      await axios.put(`${API_ENDPOINT}/${updatedWeek.weekNo}`, updatedWeek);
-      alert("Week updated successfully!");
-      setWeeks(weeks.map((w, i) => (i === editingIndex ? updatedWeek : w)));
-    } catch (err) {
-      console.error("Error updating week:", err);
-      alert("Failed to update week.");
-      // Local fallback
-      setWeeks(weeks.map((w, i) => (i === editingIndex ? updatedWeek : w)));
-    }
-
-    setEditingIndex(null);
-    resetForm();
-  };
-
-  // Start editing
-  const handleEdit = (index) => {
-    const w = weeks[index];
-    setEditingIndex(index);
-    setForm({
-      weekNo: w.weekNo || "",
-      name: w.name || "",
-      date: w.date ? w.date.split("T")[0] : "",
-      theme: w.theme || "",
-      verse: w.verse || "",
-      purpose: w.purpose || "",
-      plans: Array.isArray(w.plans) ? w.plans.join("\n") : "",
-    });
-  };
-
-  // Delete week
-  const handleDelete = async (index) => {
-    if (!window.confirm("Are you sure you want to delete this week?")) return;
-
-    const weekToDelete = weeks[index];
-
-    try {
-      await axios.delete(`${API_ENDPOINT}/${weekToDelete.weekNo}`);
-      alert("Week deleted successfully!");
-    } catch (err) {
-      console.error("Error deleting week:", err);
-      alert("Failed to delete from server, removing locally.");
-    }
-
-    setWeeks(weeks.filter((_, i) => i !== index));
-  };
+  const buildPayload = () => ({
+    weekNo: Number(form.weekNo),
+    name: form.name?.trim() || "",
+   date: form.date, // backend will new Date(date) or null
+    theme: form.theme?.trim() || "",
+    verse: form.verse?.trim() || "",
+    purpose: form.purpose?.trim() || "",
+    plans: String(form.plans || "")
+      .split("\n")
+      .map((p) => p.trim())
+      .filter(Boolean),
+  });
 
   const resetForm = () => {
     setForm({
@@ -151,7 +94,92 @@ export default function AdminWeekThemes() {
       purpose: "",
       plans: "",
     });
-    setEditingIndex(null);
+    setEditingId(null);
+  };
+
+  const handleAdd = async () => {
+
+    if (!token) return alert("No token found. Please login again.");
+    if (!form.weekNo) return alert("Week number is required.");
+    if (!form.date) {
+  alert("Date is required.");
+  return;
+}
+
+    try {
+      const payload = buildPayload();
+      const res = await axios.post(API_ENDPOINT, payload, { headers: authHeaders });
+
+      // Your POST returns { success, message, data }
+      if (!res.data?.success) {
+        return alert(res.data?.message || "Failed to add week.");
+      }
+
+      alert("Week added successfully!");
+      await fetchWeeks();
+      resetForm();
+    } catch (err) {
+      console.error("Error adding week:", err?.response?.data || err);
+      alert(err.response?.data?.message || "Failed to add week.");
+    }
+  };
+
+  const handleEdit = (week) => {
+    setEditingId(week._id); // IMPORTANT: use _id
+    setForm({
+      weekNo: week.weekNo ?? "",
+      name: week.name ?? "",
+      date: toDateInputValue(week.date),
+      theme: week.theme ?? "",
+      verse: week.verse ?? "",
+      purpose: week.purpose ?? "",
+      plans: Array.isArray(week.plans) ? week.plans.join("\n") : "",
+    });
+  };
+
+  const handleUpdate = async () => {
+    if (!token) return alert("No token found. Please login again.");
+    if (!editingId) return alert("No week selected to update.");
+
+    try {
+      const payload = buildPayload();
+
+      const res = await axios.put(`${API_ENDPOINT}/${editingId}`, payload, {
+        headers: authHeaders,
+      });
+
+      if (!res.data?.success) {
+        return alert(res.data?.message || "Failed to update week.");
+      }
+
+      alert("Week updated successfully!");
+      await fetchWeeks();
+      resetForm();
+    } catch (err) {
+      console.error("Error updating week:", err?.response?.data || err);
+      alert(err.response?.data?.message || "Failed to update week.");
+    }
+  };
+
+  const handleDelete = async (week) => {
+    if (!token) return alert("No token found. Please login again.");
+    if (!window.confirm("Are you sure you want to delete this week?")) return;
+
+    try {
+      const res = await axios.delete(`${API_ENDPOINT}/${week._id}`, {
+        headers: authHeaders,
+      });
+
+      if (!res.data?.success) {
+        return alert(res.data?.message || "Failed to delete week.");
+      }
+
+      alert("Week deleted successfully!");
+      await fetchWeeks();
+    } catch (err) {
+      console.error("Error deleting week:", err?.response?.data || err);
+      alert(err.response?.data?.message || "Failed to delete week.");
+    }
   };
 
   return (
@@ -168,11 +196,11 @@ export default function AdminWeekThemes() {
           Admin Week Themes
         </h1>
 
-        {/* Form */}
         <div className="bg-white p-8 rounded-2xl shadow-lg max-w-4xl mx-auto mb-12">
           <h2 className="text-2xl font-bold mb-6 text-gray-800">
-            {editingIndex !== null ? "Edit Week" : "Add New Week"}
+            {editingId ? "Edit Week" : "Add New Week"}
           </h2>
+
           <div className="grid md:grid-cols-2 gap-6">
             <input
               type="number"
@@ -192,12 +220,13 @@ export default function AdminWeekThemes() {
               className="border border-gray-300 p-4 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
             />
             <input
-              type="date"
-              name="date"
-              value={form.date}
-              onChange={handleChange}
-              className="border border-gray-300 p-4 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            />
+  type="date"
+  name="date"
+  value={form.date || ""}
+  onChange={handleChange}
+  required
+  className="border border-gray-300 p-4 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+/>
             <input
               type="text"
               name="theme"
@@ -234,12 +263,13 @@ export default function AdminWeekThemes() {
 
           <div className="mt-8 flex gap-4 justify-end">
             <button
-              onClick={editingIndex !== null ? handleUpdate : handleAdd}
+              onClick={editingId ? handleUpdate : handleAdd}
               className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition shadow-md"
             >
-              {editingIndex !== null ? "Update Week" : "Add Week"}
+              {editingId ? "Update Week" : "Add Week"}
             </button>
-            {editingIndex !== null && (
+
+            {editingId && (
               <button
                 onClick={resetForm}
                 className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-8 rounded-lg transition shadow-md"
@@ -250,7 +280,6 @@ export default function AdminWeekThemes() {
           </div>
         </div>
 
-        {/* Loading State */}
         {loading && (
           <div className="text-center py-16">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent"></div>
@@ -258,7 +287,6 @@ export default function AdminWeekThemes() {
           </div>
         )}
 
-        {/* Empty State */}
         {!loading && weeks.length === 0 && (
           <div className="text-center py-16 bg-white rounded-2xl shadow-lg">
             <p className="text-2xl text-gray-500 mb-3">No week themes yet</p>
@@ -266,12 +294,11 @@ export default function AdminWeekThemes() {
           </div>
         )}
 
-        {/* Weeks Grid */}
         {!loading && weeks.length > 0 && (
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {weeks.map((week, idx) => (
+            {weeks.map((week) => (
               <div
-                key={week._id || idx}
+                key={week._id}
                 className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 relative"
               >
                 <div className="absolute top-4 right-6">
@@ -301,7 +328,7 @@ export default function AdminWeekThemes() {
                   <strong>Purpose:</strong> {week.purpose || "Not specified"}
                 </p>
 
-                {week.plans && week.plans.length > 0 && (
+                {Array.isArray(week.plans) && week.plans.length > 0 && (
                   <div className="mb-6">
                     <strong className="block mb-2 text-gray-800">Plans:</strong>
                     <ul className="list-disc list-inside space-y-1 text-gray-600">
@@ -314,13 +341,13 @@ export default function AdminWeekThemes() {
 
                 <div className="flex gap-3 pt-4 border-t border-gray-200">
                   <button
-                    onClick={() => handleEdit(idx)}
+                    onClick={() => handleEdit(week)}
                     className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white font-medium py-2 rounded-lg transition"
                   >
                     Edit
                   </button>
                   <button
-                    onClick={() => handleDelete(idx)}
+                    onClick={() => handleDelete(week)}
                     className="flex-1 bg-red-500 hover:bg-red-600 text-white font-medium py-2 rounded-lg transition"
                   >
                     Delete

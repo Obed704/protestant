@@ -46,7 +46,7 @@ import {
 } from "lucide-react";
 
 // Use environment variable for API base
-const API_BASE = import.meta.env.VITE_BASE_URL || "http://localhost:5000";
+const API_BASE = import.meta.env.VITE_BASE_URL;
 
 const VISIBLE_DEPARTMENTS_COUNT = 4;
 

@@ -63,39 +63,49 @@ export default function LoginPage() {
     if (error) setError("");
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!formValid) return;
-    
-    setError("");
-    setLoading(true);
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  if (!formValid) return;
 
-    try {
-      const res = await fetch(API_LOGIN_ENDPOINT, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      const data = await res.json();
+  setError("");
+  setLoading(true);
 
-      if (res.ok) {
-        login(data.user, data.token);
-        console.log("Logged in user data:", data);
-        
-        if (rememberMe) {
-          localStorage.setItem('rememberEmail', form.email);
-        } else {
-          localStorage.removeItem('rememberEmail');
-        }
-      } else {
-        setError(data.msg || "Invalid email or password");
+  try {
+    const res = await fetch(API_LOGIN_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(form),
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      let u = data.user;
+
+      // ✅ if avatarUrl not present, fetch /me using the token
+      if (!u?.avatarUrl) {
+        const meRes = await fetch(`${API_BASE_URL}/api/users/me`, {
+          headers: { Authorization: `Bearer ${data.token}` },
+        });
+        const meData = await meRes.json();
+
+        // your /api/users/me returns { success:true, user: req.user }
+        u = meData?.user || u;
       }
-    } catch (err) {
-      setError("Server error, try again later.");
-    } finally {
-      setLoading(false);
+
+      login(u, data.token);
+
+      if (rememberMe) localStorage.setItem("rememberEmail", form.email);
+      else localStorage.removeItem("rememberEmail");
+    } else {
+      setError(data.msg || "Invalid email or password");
     }
-  };
+  } catch (err) {
+    setError("Server error, try again later.");
+  } finally {
+    setLoading(false);
+  }
+};
 
   // Google OAuth handler
   const handleGoogleLogin = () => {

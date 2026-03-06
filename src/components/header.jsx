@@ -23,6 +23,54 @@ import {
   FiSearch,
 } from "react-icons/fi";
 
+const API_BASE_URL = import.meta.env.VITE_BASE_URL;
+
+const absUrl = (url) => {
+  if (!url) return "";
+  const s = String(url).trim();
+  if (!s) return "";
+  if (s.startsWith("http")) return s;
+  const base = String(API_BASE_URL || "").replace(/\/+$/, "");
+  if (!base) return s;
+  return `${base}${s.startsWith("/") ? s : `/${s}`}`;
+};
+
+const initialsOf = (nameOrEmail = "") => {
+  const s = String(nameOrEmail || "").trim();
+  if (!s) return "U";
+  const parts = s.split(/\s+/).filter(Boolean);
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[1][0]).toUpperCase();
+};
+
+function UserAvatar({ label, src, size = 36, ring = true }) {
+  const [broken, setBroken] = useState(false);
+  const initials = initialsOf(label);
+
+  return (
+    <div
+      className={`relative shrink-0 rounded-full overflow-hidden ${
+        ring ? "ring-2 ring-white/60 shadow-lg" : "border border-blue-100/60"
+      } bg-gray-100`}
+      style={{ width: size, height: size }}
+      title={label || ""}
+    >
+      {src && !broken ? (
+        <img
+          src={src}
+          alt={label || "avatar"}
+          className="h-full w-full object-cover"
+          onError={() => setBroken(true)}
+        />
+      ) : (
+        <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-blue-600 to-blue-800 text-white font-bold">
+          {initials}
+        </div>
+      )}
+    </div>
+  );
+}
+
 const Header = () => {
   const { user, logout } = useContext(AuthContext);
   const location = useLocation();
@@ -100,9 +148,8 @@ const Header = () => {
             items: [
               { name: "Shorts", to: "/shorts", icon: <FiZap /> },
               { name: "Videos", to: "/videos", icon: <FiVideo /> },
-              { name: "chat", to: "/chat", icon: <FiZap /> },
-              { name: "committes", to: "/committee", icon: <FiZap /> },
-              
+              { name: "Chat", to: "/chat", icon: <FiZap /> },
+              { name: "Committees", to: "/committee", icon: <FiZap /> },
             ],
           },
         ],
@@ -110,7 +157,6 @@ const Header = () => {
     ],
     []
   );
-
 
   return (
     <>
@@ -257,12 +303,6 @@ const Header = () => {
 
             {/* Right side */}
             <div className="flex items-center gap-3">
-              {/* Optional search (friendly) */}
-              {/* <div className="hidden xl:flex items-center gap-2 px-3 py-2 rounded-full bg-white/60 border border-blue-100/50 shadow-sm">
-                <FiSearch className="text-blue-600" />
-                <span className="text-sm text-gray-500">Search…</span>
-              </div> */}
-
               {/* Desktop Auth */}
               <div className="hidden lg:flex items-center">
                 {user ? <UserProfile user={user} logout={logout} /> : <AuthButtons />}
@@ -353,9 +393,20 @@ const Header = () => {
               {user ? (
                 <div className="space-y-3">
                   <div className="px-4 py-3 bg-gradient-to-r from-blue-50/50 to-white/30 rounded-lg border border-blue-100/50 backdrop-blur-sm">
-                    <p className="font-medium text-blue-900">{user.fullName}</p>
-                    <p className="text-sm text-blue-700/70 truncate">{user.email}</p>
+                    <div className="flex items-center gap-3">
+                      <UserAvatar
+                        label={user.fullName || user.email}
+                        src={absUrl(user.avatarUrl)}
+                        size={42}
+                        ring={false}
+                      />
+                      <div className="min-w-0">
+                        <p className="font-medium text-blue-900 truncate">{user.fullName}</p>
+                        <p className="text-sm text-blue-700/70 truncate">{user.email}</p>
+                      </div>
+                    </div>
                   </div>
+
                   <Link
                     to="/profile"
                     className="flex items-center gap-3 px-4 py-3 hover:bg-blue-50/50 rounded-lg transition-all duration-300"
@@ -363,6 +414,7 @@ const Header = () => {
                   >
                     <FiUser className="w-5 h-5 text-blue-600" /> My Profile
                   </Link>
+
                   <button
                     onClick={() => {
                       logout();
@@ -646,10 +698,13 @@ function CollapsibleMenuItem({ item, onClose }) {
 }
 
 // ────────────────────────────────────────────────
-// User Profile Dropdown
+// User Profile Dropdown (now uses avatarUrl)
 // ────────────────────────────────────────────────
 function UserProfile({ user, logout }) {
   const [open, setOpen] = useState(false);
+
+  const label = user?.fullName || user?.email || "User";
+  const src = absUrl(user?.avatarUrl);
 
   return (
     <div className="relative">
@@ -657,13 +712,13 @@ function UserProfile({ user, logout }) {
         onClick={() => setOpen((s) => !s)}
         className="flex items-center gap-3 focus:outline-none group relative"
       >
-        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-semibold shadow-lg">
-          {user.fullName?.charAt(0)?.toUpperCase()}
-        </div>
+        <UserAvatar label={label} src={src} size={38} />
+
         <div className="hidden xl:block text-left">
           <p className="font-medium text-sm leading-tight">{user.fullName}</p>
           <p className="text-xs text-blue-600/70">Member</p>
         </div>
+
         <FiChevronDown className={`w-4 h-4 text-blue-500 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
 
@@ -672,9 +727,15 @@ function UserProfile({ user, logout }) {
           <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
           <div className="absolute right-0 mt-3 w-56 bg-white/95 backdrop-blur-xl rounded-xl shadow-2xl border border-white/20 py-2 z-40 overflow-hidden">
             <div className="px-4 py-3 border-b border-blue-100/30">
-              <p className="font-medium text-blue-900">{user.fullName}</p>
-              <p className="text-sm text-blue-700/70 truncate">{user.email}</p>
+              <div className="flex items-center gap-3">
+                <UserAvatar label={label} src={src} size={40} ring={false} />
+                <div className="min-w-0">
+                  <p className="font-medium text-blue-900 truncate">{user.fullName}</p>
+                  <p className="text-sm text-blue-700/70 truncate">{user.email}</p>
+                </div>
+              </div>
             </div>
+
             <Link
               to="/profile"
               className="flex items-center px-4 py-3 hover:bg-blue-50/50 transition-all duration-200"
@@ -683,6 +744,7 @@ function UserProfile({ user, logout }) {
               <FiUser className="w-4 h-4 mr-3 text-blue-600" />
               My Profile
             </Link>
+
             <button
               onClick={() => {
                 logout();

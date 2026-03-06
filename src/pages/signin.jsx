@@ -10,24 +10,26 @@ import {
   AiOutlineUser,
   AiOutlineCheckCircle,
   AiOutlineArrowLeft,
+  AiOutlinePicture,
 } from "react-icons/ai";
 import { RiShieldUserFill } from "react-icons/ri";
 import { Link, useNavigate } from "react-router-dom";
 import Logo from "../assets/img/logo.jpg";
 
-// Use environment variables for API and video URLs
+// Use environment variables for API endpoints
 const API_BASE_URL = import.meta.env.VITE_BASE_URL;
 const API_REGISTER_ENDPOINT = `${API_BASE_URL}/api/auth/register`;
 const API_GOOGLE_AUTH = `${API_BASE_URL}/api/auth/google`;
-const BACKGROUND_VIDEO_URL = `${API_BASE_URL}/largeVideo/1756800250256-878408921.mp4`;
 
 export default function SigninPage() {
   const [form, setForm] = useState({
     fullName: "",
     email: "",
+    avatarUrl: "", // ✅ new
     password: "",
     confirmPassword: "",
   });
+
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -35,8 +37,8 @@ export default function SigninPage() {
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [success, setSuccess] = useState(false);
   const [formValid, setFormValid] = useState(false);
+
   const navigate = useNavigate();
-  const videoRef = useRef(null);
 
   // Custom styles object
   const styles = {
@@ -76,14 +78,17 @@ export default function SigninPage() {
 
   // Form validation
   useEffect(() => {
-    const isValid =
-      form.fullName.trim() !== "" &&
-      form.email.trim() !== "" &&
-      /\S+@\S+\.\S+/.test(form.email) &&
+    const emailOk = form.email.trim() !== "" && /\S+@\S+\.\S+/.test(form.email);
+    const pwOk =
       form.password.trim() !== "" &&
       form.password.length >= 6 &&
       form.password === form.confirmPassword;
-    setFormValid(isValid);
+
+    // avatarUrl optional, but if provided should look like a URL
+    const avatarOk =
+      !form.avatarUrl.trim() || /^https?:\/\/.+/i.test(form.avatarUrl.trim());
+
+    setFormValid(form.fullName.trim() !== "" && emailOk && pwOk && avatarOk);
   }, [form]);
 
   // Clear errors on input change
@@ -94,22 +99,25 @@ export default function SigninPage() {
     }
   };
 
-  // Handle video error
-  const handleVideoError = () => {
-    console.warn("Background video failed to load");
-  };
-
   const validate = () => {
     const newErrors = {};
+
     if (!form.fullName.trim()) newErrors.fullName = "Full name is required";
+
     if (!form.email.trim()) newErrors.email = "Email is required";
-    if (!/\S+@\S+\.\S+/.test(form.email))
+    else if (!/\S+@\S+\.\S+/.test(form.email))
       newErrors.email = "Invalid email format";
+
+    if (form.avatarUrl.trim() && !/^https?:\/\/.+/i.test(form.avatarUrl.trim())) {
+      newErrors.avatarUrl = "Avatar URL must start with http:// or https://";
+    }
+
     if (!form.password) newErrors.password = "Password is required";
     if (form.password.length < 6)
       newErrors.password = "Password must be at least 6 characters";
     if (form.password !== form.confirmPassword)
       newErrors.confirmPassword = "Passwords do not match";
+
     return newErrors;
   };
 
@@ -126,10 +134,17 @@ export default function SigninPage() {
     setErrors({});
 
     try {
+      const payload = {
+        fullName: form.fullName,
+        email: form.email,
+        password: form.password,
+        avatarUrl: form.avatarUrl, // ✅ send to backend
+      };
+
       const res = await fetch(API_REGISTER_ENDPOINT, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
@@ -160,19 +175,8 @@ export default function SigninPage() {
       <style>{styles.pulseAnimation}</style>
 
       <div className="relative min-h-screen w-screen overflow-hidden bg-gradient-to-br from-gray-900 to-purple-900">
-        {/* Background Video */}
+        {/* Background (VIDEO REMOVED) */}
         <div className="absolute inset-0 overflow-hidden">
-          <video
-            ref={videoRef}
-            className="absolute top-0 left-0 w-full h-full object-cover opacity-40"
-            autoPlay
-            muted
-            loop
-            playsInline
-            onError={handleVideoError}
-          >
-            <source src={BACKGROUND_VIDEO_URL} type="video/mp4" />
-          </video>
           <div className="absolute inset-0 bg-gradient-to-br from-blue-900/60 via-purple-900/40 to-gray-900/70"></div>
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-transparent via-black/20 to-black/60"></div>
         </div>
@@ -248,8 +252,7 @@ export default function SigninPage() {
                   <GiOpenBook className="text-3xl text-yellow-400 flex-shrink-0 mt-1" />
                   <div className="text-left">
                     <p className="text-xl lg:text-2xl text-white italic leading-relaxed">
-                      "Come to me, all you who are weary and burdened, and I
-                      will give you rest."
+                      "Come to me, all you who are weary and burdened, and I will give you rest."
                     </p>
                     <p className="mt-6 text-gray-300 font-medium text-lg">
                       – Matthew 11:28
@@ -280,9 +283,7 @@ export default function SigninPage() {
           <div className="w-full lg:w-1/2 max-w-lg">
             <div className="backdrop-blur-xl bg-white/10 p-8 lg:p-10 rounded-3xl shadow-2xl border border-white/20">
               <div className="mb-8 text-center">
-                <h2 className="text-3xl font-bold text-white">
-                  Create Account
-                </h2>
+                <h2 className="text-3xl font-bold text-white">Create Account</h2>
                 <p className="text-gray-300 mt-2">Join our community today</p>
               </div>
 
@@ -313,9 +314,7 @@ export default function SigninPage() {
                     />
                   </div>
                   {errors.fullName && (
-                    <p className="text-red-300 text-sm pl-4">
-                      {errors.fullName}
-                    </p>
+                    <p className="text-red-300 text-sm pl-4">{errors.fullName}</p>
                   )}
                 </div>
 
@@ -342,6 +341,35 @@ export default function SigninPage() {
                   )}
                 </div>
 
+                {/* Avatar URL (NEW) */}
+                <div className="space-y-2">
+                  <div className="relative">
+                    <AiOutlinePicture className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg" />
+                    <input
+                      type="text"
+                      name="avatarUrl"
+                      value={form.avatarUrl}
+                      onChange={handleChange}
+                      placeholder="Avatar Image URL (optional)"
+                      className={`w-full pl-12 pr-4 py-3.5 bg-white/15 text-white placeholder-gray-400 rounded-xl outline-none border transition-all duration-200 ${
+                        errors.avatarUrl
+                          ? "border-red-400 focus:border-red-400 focus:ring-2 focus:ring-red-400/30"
+                          : "border-white/20 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30"
+                      }`}
+                      disabled={loading}
+                    />
+                  </div>
+
+                  <p className="text-xs text-gray-300/80 pl-4">
+                    Paste a public image link from online (example: a profile picture URL).
+                    Make sure the link starts with http:// or https:// and is publicly accessible.
+                  </p>
+
+                  {errors.avatarUrl && (
+                    <p className="text-red-300 text-sm pl-4">{errors.avatarUrl}</p>
+                  )}
+                </div>
+
                 {/* Password */}
                 <div className="space-y-2">
                   <div className="relative">
@@ -364,17 +392,11 @@ export default function SigninPage() {
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
                     >
-                      {showPassword ? (
-                        <AiOutlineEyeInvisible />
-                      ) : (
-                        <AiOutlineEye />
-                      )}
+                      {showPassword ? <AiOutlineEyeInvisible /> : <AiOutlineEye />}
                     </button>
                   </div>
                   {errors.password && (
-                    <p className="text-red-300 text-sm pl-4">
-                      {errors.password}
-                    </p>
+                    <p className="text-red-300 text-sm pl-4">{errors.password}</p>
                   )}
 
                   {/* Password Strength */}
@@ -428,22 +450,14 @@ export default function SigninPage() {
                     />
                     <button
                       type="button"
-                      onClick={() =>
-                        setShowConfirmPassword(!showConfirmPassword)
-                      }
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                       className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
                     >
-                      {showConfirmPassword ? (
-                        <AiOutlineEyeInvisible />
-                      ) : (
-                        <AiOutlineEye />
-                      )}
+                      {showConfirmPassword ? <AiOutlineEyeInvisible /> : <AiOutlineEye />}
                     </button>
                   </div>
                   {errors.confirmPassword && (
-                    <p className="text-red-300 text-sm pl-4">
-                      {errors.confirmPassword}
-                    </p>
+                    <p className="text-red-300 text-sm pl-4">{errors.confirmPassword}</p>
                   )}
                 </div>
 
@@ -457,17 +471,11 @@ export default function SigninPage() {
                   />
                   <label htmlFor="terms" className="text-sm text-gray-300">
                     I agree to the{" "}
-                    <a
-                      href="/terms"
-                      className="text-blue-400 hover:text-blue-300 hover:underline"
-                    >
+                    <a href="/terms" className="text-blue-400 hover:text-blue-300 hover:underline">
                       Terms of Service
                     </a>{" "}
                     and{" "}
-                    <a
-                      href="/privacy"
-                      className="text-blue-400 hover:text-blue-300 hover:underline"
-                    >
+                    <a href="/privacy" className="text-blue-400 hover:text-blue-300 hover:underline">
                       Privacy Policy
                     </a>
                   </label>
@@ -497,9 +505,7 @@ export default function SigninPage() {
               {/* Divider */}
               <div className="flex items-center my-6">
                 <div className="flex-1 h-px bg-gray-600"></div>
-                <span className="px-4 text-sm text-gray-400">
-                  Or sign up with
-                </span>
+                <span className="px-4 text-sm text-gray-400">Or sign up with</span>
                 <div className="flex-1 h-px bg-gray-600"></div>
               </div>
 
