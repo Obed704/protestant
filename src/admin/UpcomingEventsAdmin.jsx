@@ -1,48 +1,82 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 
-// Use your existing BASE_URL from .env → exposed with VITE_ prefix for frontend
 const API_BASE_URL = import.meta.env.VITE_BASE_URL;
 const API_ENDPOINT = `${API_BASE_URL}/api/events`;
+const DEFAULT_EVENT_IMAGE = "/default-event.jpg";
+
+const resolveEventImage = (imageUrl) => {
+  if (!imageUrl) return DEFAULT_EVENT_IMAGE;
+
+  if (
+    imageUrl.startsWith("http://") ||
+    imageUrl.startsWith("https://") ||
+    imageUrl.startsWith("//")
+  ) {
+    return imageUrl;
+  }
+
+  if (imageUrl.startsWith("/")) {
+    return `${API_BASE_URL}${imageUrl}`;
+  }
+
+  return imageUrl;
+};
 
 const UpcomingEventsAdmin = () => {
   const [events, setEvents] = useState([]);
-  const [formData, setFormData] = useState({
-    title: "",
-    verse: "",
-    description: "",
-    date: "",
-    postedBy: "",
-    image: null,
-  });
   const [editingId, setEditingId] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Fetch all events safely
+  const [formData, setFormData] = useState({
+    title: "",
+    verse: "",
+    description: "",
+    shortDescription: "",
+    date: "",
+    endDate: "",
+    location: "",
+    virtualLink: "",
+    category: "other",
+    capacity: "",
+    postedBy: "",
+    imageUrl: "",
+    isFeatured: false,
+    status: "published",
+    tags: "",
+    image: null,
+  });
+
+  const authHeaders = useMemo(() => {
+    const token =
+      localStorage.getItem("token") || localStorage.getItem("accessToken") || "";
+    return token
+      ? {
+          Authorization: `Bearer ${token}`,
+        }
+      : {};
+  }, []);
+
   const fetchEvents = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(API_ENDPOINT);
 
-      // Safely extract events array
+      const res = await axios.get(API_ENDPOINT, {
+        params: { status: "all", limit: 100, page: 1 },
+      });
+
       let eventsArray = [];
-      if (res.data) {
-        if (Array.isArray(res.data)) {
-          eventsArray = res.data;
-        } else if (Array.isArray(res.data.events)) {
-          eventsArray = res.data.events;
-        } else if (Array.isArray(res.data.data)) {
-          eventsArray = res.data.data;
-        }
-      }
+
+      if (Array.isArray(res.data)) eventsArray = res.data;
+      else if (Array.isArray(res.data.events)) eventsArray = res.data.events;
+      else if (Array.isArray(res.data.data)) eventsArray = res.data.data;
 
       setEvents(eventsArray);
     } catch (err) {
-      console.error("Error fetching events:", err);
-      setEvents([]);
-      alert("Failed to load events. Check console.");
+      console.error(err);
+      alert("Failed to load events");
     } finally {
       setLoading(false);
     }
@@ -52,84 +86,148 @@ const UpcomingEventsAdmin = () => {
     fetchEvents();
   }, []);
 
-  // Handle form input changes
+  const resetForm = () => {
+    setFormData({
+      title: "",
+      verse: "",
+      description: "",
+      shortDescription: "",
+      date: "",
+      endDate: "",
+      location: "",
+      virtualLink: "",
+      category: "other",
+      capacity: "",
+      postedBy: "",
+      imageUrl: "",
+      isFeatured: false,
+      status: "published",
+      tags: "",
+      image: null,
+    });
+    setEditingId(null);
+    setPreviewImage(null);
+  };
+
   const handleChange = (e) => {
-    if (e.target.name === "image") {
-      const file = e.target.files[0];
-      setFormData({ ...formData, image: file });
-      setPreviewImage(file ? URL.createObjectURL(file) : null);
-    } else {
-      setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value, type, checked, files } = e.target;
+
+    if (type === "file") {
+      const file = files?.[0] || null;
+      setFormData((prev) => ({ ...prev, image: file }));
+
+      if (file) {
+        setPreviewImage(URL.createObjectURL(file));
+      } else {
+        setPreviewImage(formData.imageUrl || null);
+      }
+
+      return;
+    }
+
+    const nextValue = type === "checkbox" ? checked : value;
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: nextValue,
+    }));
+
+    if (name === "imageUrl") {
+      setPreviewImage(value);
     }
   };
 
-  // Submit create or update
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const data = new FormData();
-    Object.keys(formData).forEach((key) => {
-      if (formData[key] !== null && formData[key] !== undefined) {
-        data.append(key, formData[key]);
-      }
-    });
-
     try {
-      if (editingId) {
-        await axios.put(`${API_ENDPOINT}/${editingId}`, data, {
-          headers: { "Content-Type": "multipart/form-data" },
+      const hasFile = !!formData.image;
+      let payload;
+      let config = { headers: { ...authHeaders } };
+
+      if (hasFile) {
+        payload = new FormData();
+        Object.entries(formData).forEach(([key, value]) => {
+          if (value !== null && value !== undefined && value !== "") {
+            payload.append(key, value);
+          }
         });
-        alert("Event updated successfully!");
+        config.headers["Content-Type"] = "multipart/form-data";
       } else {
-        await axios.post(API_ENDPOINT, data, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-        alert("Event created successfully!");
+        payload = {
+          title: formData.title,
+          verse: formData.verse,
+          description: formData.description,
+          shortDescription: formData.shortDescription,
+          date: formData.date,
+          endDate: formData.endDate || null,
+          location: formData.location,
+          virtualLink: formData.virtualLink,
+          category: formData.category,
+          capacity: formData.capacity === "" ? 0 : Number(formData.capacity),
+          postedBy: formData.postedBy,
+          imageUrl: formData.imageUrl,
+          isFeatured: formData.isFeatured,
+          status: formData.status,
+          tags: formData.tags,
+        };
       }
 
-      // Reset form
-      setFormData({
-        title: "",
-        verse: "",
-        description: "",
-        date: "",
-        postedBy: "",
-        image: null,
-      });
-      setPreviewImage(null);
-      setEditingId(null);
+      if (editingId) {
+        await axios.put(`${API_ENDPOINT}/${editingId}`, payload, config);
+        alert("Event updated");
+      } else {
+        await axios.post(API_ENDPOINT, payload, config);
+        alert("Event created");
+      }
+
+      resetForm();
       fetchEvents();
     } catch (err) {
-      console.error("Error saving event:", err);
-      alert("Failed to save event.");
+      console.error(err);
+      alert(err.response?.data?.message || "Error saving event");
     }
   };
 
-  // Edit event
   const handleEdit = (event) => {
+    const startDate = event.dateStart || event.date;
+    const finalEndDate = event.dateEnd || event.endDate;
+
     setEditingId(event._id);
     setFormData({
       title: event.title || "",
       verse: event.verse || "",
       description: event.description || "",
-      date: event.date ? event.date.split("T")[0] : "",
+      shortDescription: event.shortDescription || "",
+      date: startDate ? new Date(startDate).toISOString().slice(0, 16) : "",
+      endDate: finalEndDate ? new Date(finalEndDate).toISOString().slice(0, 16) : "",
+      location: event.location || "",
+      virtualLink: event.virtualLink || "",
+      category: event.category || "other",
+      capacity: event.capacity ?? "",
       postedBy: event.postedBy || "",
-      image: null, // Can't pre-fill file input
+      imageUrl: event.imageUrl || "",
+      isFeatured: !!event.isFeatured,
+      status: event.status || "published",
+      tags: Array.isArray(event.tags) ? event.tags.join(", ") : "",
+      image: null,
     });
-    setPreviewImage(event.imageUrl ? `${API_BASE_URL}${event.imageUrl}` : null);
+
+    setPreviewImage(event.imageUrl || null);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // Delete event
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this event?")) return;
+    if (!window.confirm("Delete this event?")) return;
 
     try {
-      await axios.delete(`${API_ENDPOINT}/${id}`);
-      alert("Event deleted successfully!");
+      await axios.delete(`${API_ENDPOINT}/${id}`, {
+        headers: { ...authHeaders },
+      });
       fetchEvents();
     } catch (err) {
-      console.error("Error deleting event:", err);
-      alert("Failed to delete event.");
+      console.error(err);
+      alert(err.response?.data?.message || "Delete failed");
     }
   };
 
@@ -137,23 +235,20 @@ const UpcomingEventsAdmin = () => {
     <div className="p-8 min-h-screen bg-gray-100">
       <Link
         to="/admin"
-        className="bg-white/80 hover:bg-white text-gray-800 font-semibold px-4 py-2 rounded-lg shadow-md mb-6 inline-block fixed top-4 left-4 z-10"
+        className="bg-white shadow px-4 py-2 rounded fixed top-4 left-4 z-20"
       >
         ← Dashboard
       </Link>
 
-      <div className="pt-20">
-        <h1 className="text-4xl font-extrabold text-center text-gray-900 mb-10">
-          Manage Upcoming Events
-        </h1>
+      <div className="pt-16">
+        <h1 className="text-4xl font-bold text-center mb-10">Manage Events</h1>
 
-        {/* Event Form */}
         <form
           onSubmit={handleSubmit}
-          className="bg-white shadow-lg p-8 rounded-2xl mb-12 max-w-3xl mx-auto"
+          className="bg-white p-8 rounded-xl shadow max-w-5xl mx-auto mb-12"
         >
-          <h2 className="text-2xl font-bold mb-8 text-gray-800">
-            {editingId ? "Edit Event" : "Add New Event"}
+          <h2 className="text-2xl font-bold mb-6">
+            {editingId ? "Edit Event" : "Create Event"}
           </h2>
 
           <div className="grid md:grid-cols-2 gap-6">
@@ -163,93 +258,202 @@ const UpcomingEventsAdmin = () => {
               placeholder="Event Title"
               value={formData.title}
               onChange={handleChange}
-              className="border border-gray-300 p-4 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              className="border p-3 rounded"
               required
             />
+
             <input
               type="text"
               name="verse"
-              placeholder="Bible Verse (optional)"
+              placeholder="Bible Verse"
               value={formData.verse}
               onChange={handleChange}
-              className="border border-gray-300 p-4 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              className="border p-3 rounded"
             />
+
             <input
-              type="date"
+              type="datetime-local"
               name="date"
               value={formData.date}
               onChange={handleChange}
-              className="border border-gray-300 p-4 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              className="border p-3 rounded"
               required
             />
+
+            <input
+              type="datetime-local"
+              name="endDate"
+              value={formData.endDate}
+              onChange={handleChange}
+              className="border p-3 rounded"
+            />
+
+            <input
+              type="text"
+              name="location"
+              placeholder="Location"
+              value={formData.location}
+              onChange={handleChange}
+              className="border p-3 rounded"
+            />
+
+            <input
+              type="text"
+              name="virtualLink"
+              placeholder="Virtual Link"
+              value={formData.virtualLink}
+              onChange={handleChange}
+              className="border p-3 rounded"
+            />
+
+            <select
+              name="category"
+              value={formData.category}
+              onChange={handleChange}
+              className="border p-3 rounded"
+            >
+              <option value="general">General</option>
+              <option value="worship">Worship</option>
+              <option value="bible_study">Bible Study</option>
+              <option value="prayer">Prayer</option>
+              <option value="youth">Youth</option>
+              <option value="choir">Choir</option>
+              <option value="training">Training</option>
+              <option value="baptism">Baptism</option>
+              <option value="fellowship">Fellowship</option>
+              <option value="outreach">Outreach</option>
+              <option value="other">Other</option>
+            </select>
+
+            <input
+              type="number"
+              name="capacity"
+              placeholder="Capacity (0 = unlimited)"
+              value={formData.capacity}
+              onChange={handleChange}
+              className="border p-3 rounded"
+              min="0"
+            />
+
             <input
               type="text"
               name="postedBy"
               placeholder="Posted By"
               value={formData.postedBy}
               onChange={handleChange}
-              className="border border-gray-300 p-4 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              className="border p-3 rounded"
             />
+
+            <select
+              name="status"
+              value={formData.status}
+              onChange={handleChange}
+              className="border p-3 rounded"
+            >
+              <option value="published">Published</option>
+              <option value="draft">Draft</option>
+              <option value="cancelled">Cancelled</option>
+              <option value="archived">Archived</option>
+            </select>
+
+            <div className="md:col-span-2">
+              <input
+                type="text"
+                name="shortDescription"
+                placeholder="Short Description"
+                value={formData.shortDescription}
+                onChange={handleChange}
+                className="border p-3 rounded w-full"
+              />
+            </div>
+
             <div className="md:col-span-2">
               <textarea
                 name="description"
-                placeholder="Event Description"
+                placeholder="Event description..."
                 value={formData.description}
                 onChange={handleChange}
-                className="border border-gray-300 p-4 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none w-full"
-                rows="4"
+                rows="5"
+                className="border p-3 rounded w-full"
                 required
               />
             </div>
+
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Event Image
-              </label>
+              <input
+                type="text"
+                name="tags"
+                placeholder="Tags separated by comma"
+                value={formData.tags}
+                onChange={handleChange}
+                className="border p-3 rounded w-full"
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="text-sm font-semibold block mb-2">Image URL</label>
+              <input
+                type="text"
+                name="imageUrl"
+                placeholder="https://example.com/image.jpg"
+                value={formData.imageUrl}
+                onChange={handleChange}
+                className="border p-3 rounded w-full"
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="text-sm font-semibold block mb-2">Or Upload Image</label>
               <input
                 type="file"
                 name="image"
                 accept="image/*"
                 onChange={handleChange}
-                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                className="border p-3 rounded w-full"
               />
+            </div>
+
+            <div className="md:col-span-2 flex items-center gap-3">
+              <input
+                id="isFeatured"
+                type="checkbox"
+                name="isFeatured"
+                checked={formData.isFeatured}
+                onChange={handleChange}
+              />
+              <label htmlFor="isFeatured" className="font-medium">
+                Featured Event
+              </label>
             </div>
           </div>
 
-          {/* Image Preview */}
           {previewImage && (
             <div className="mt-6">
-              <p className="text-sm font-medium text-gray-700 mb-3">Image Preview:</p>
+              <p className="text-sm mb-2">Preview</p>
               <img
-                src={previewImage}
-                alt="Event preview"
-                className="w-full max-h-96 object-cover rounded-xl shadow-md"
+                src={resolveEventImage(previewImage)}
+                alt="preview"
+                className="w-full max-h-80 object-cover rounded"
+                onError={(e) => {
+                  e.currentTarget.src = DEFAULT_EVENT_IMAGE;
+                }}
               />
             </div>
           )}
 
-          <div className="mt-8 flex justify-end gap-4">
+          <div className="mt-8 flex gap-4 justify-end">
             <button
               type="submit"
-              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition shadow-md"
+              className="bg-blue-600 text-white px-6 py-2 rounded"
             >
-              {editingId ? "Update Event" : "Create Event"}
+              {editingId ? "Update" : "Create"}
             </button>
+
             {editingId && (
               <button
                 type="button"
-                onClick={() => {
-                  setEditingId(null);
-                  setFormData({
-                    title: "",
-                    verse: "",
-                    description: "",
-                    date: "",
-                    postedBy: "",
-                    image: null,
-                  });
-                  setPreviewImage(null);
-                }}
-                className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-8 rounded-lg transition shadow-md"
+                onClick={resetForm}
+                className="bg-gray-500 text-white px-6 py-2 rounded"
               >
                 Cancel
               </button>
@@ -257,74 +461,83 @@ const UpcomingEventsAdmin = () => {
           </div>
         </form>
 
-        {/* Loading State */}
-        {loading && (
-          <div className="text-center py-16">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent"></div>
-            <p className="mt-4 text-xl text-gray-600">Loading events...</p>
-          </div>
-        )}
+        {loading ? (
+          <p className="text-center text-lg">Loading events...</p>
+        ) : (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {events.map((event) => {
+              const startDate = event.dateStart || event.date;
 
-        {/* Empty State */}
-        {!loading && events.length === 0 && (
-          <div className="text-center py-16 bg-white rounded-2xl shadow-lg">
-            <p className="text-2xl text-gray-500 mb-3">No upcoming events yet</p>
-            <p className="text-gray-400">Create your first event using the form above.</p>
-          </div>
-        )}
-
-        {/* Events Grid */}
-        {!loading && events.length > 0 && (
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {events.map((event) => (
-              <div
-                key={event._id}
-                className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300"
-              >
-                {event.imageUrl && (
+              return (
+                <div
+                  key={event._id}
+                  className="bg-white rounded-xl shadow overflow-hidden"
+                >
                   <img
-                    src={`${API_BASE_URL}${event.imageUrl}`}
+                    src={resolveEventImage(event.imageUrl)}
                     alt={event.title}
-                    className="w-full h-64 object-cover"
+                    className="w-full h-60 object-cover"
+                    onError={(e) => {
+                      e.currentTarget.src = DEFAULT_EVENT_IMAGE;
+                    }}
                   />
-                )}
-                <div className="p-6">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-3">
-                    {event.title}
-                  </h2>
-                  {event.verse && (
-                    <p className="text-lg italic text-blue-700 mb-4">“{event.verse}”</p>
-                  )}
-                  <p className="text-gray-700 mb-4 line-clamp-3">
-                    {event.description}
-                  </p>
-                  <div className="text-sm text-gray-500 space-y-1 mb-6">
-                    <p>
-                      <strong>Date:</strong>{" "}
-                      {new Date(event.date).toLocaleDateString()}
-                    </p>
-                    <p>
-                      <strong>Posted by:</strong> {event.postedBy || "Unknown"}
-                    </p>
-                  </div>
 
-                  <div className="flex gap-3">
-                    <button
-                      onClick={() => handleEdit(event)}
-                      className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white font-medium py-2 rounded-lg transition"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(event._id)}
-                      className="flex-1 bg-red-500 hover:bg-red-600 text-white font-medium py-2 rounded-lg transition"
-                    >
-                      Delete
-                    </button>
+                  <div className="p-6">
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="text-xl font-bold mb-2">{event.title}</h3>
+                      {event.isFeatured && (
+                        <span className="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded-full">
+                          Featured
+                        </span>
+                      )}
+                    </div>
+
+                    {event.verse && (
+                      <p className="italic text-blue-600 mb-3">"{event.verse}"</p>
+                    )}
+
+                    <p className="text-gray-600 mb-4 line-clamp-3">
+                      {event.shortDescription || event.description}
+                    </p>
+
+                    <div className="text-sm text-gray-500 mb-4 space-y-1">
+                      <p>
+                        <strong>Date:</strong>{" "}
+                        {startDate ? new Date(startDate).toLocaleString() : "No date"}
+                      </p>
+                      <p>
+                        <strong>Category:</strong> {event.category || "other"}
+                      </p>
+                      <p>
+                        <strong>Status:</strong> {event.status || "published"}
+                      </p>
+                      <p>
+                        <strong>Posted by:</strong> {event.postedBy || "Admin"}
+                      </p>
+                      <p>
+                        <strong>Attendees:</strong> {event.attendeesCount ?? event.attendees?.length ?? 0}
+                      </p>
+                    </div>
+
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => handleEdit(event)}
+                        className="flex-1 bg-yellow-500 text-white py-2 rounded"
+                      >
+                        Edit
+                      </button>
+
+                      <button
+                        onClick={() => handleDelete(event._id)}
+                        className="flex-1 bg-red-500 text-white py-2 rounded"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

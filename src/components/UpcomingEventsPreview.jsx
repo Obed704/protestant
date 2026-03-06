@@ -11,9 +11,27 @@ import {
   Bell,
 } from "lucide-react";
 
-// Use your existing BASE_URL from .env
 const API_BASE_URL = import.meta.env.VITE_BASE_URL;
-const API_ENDPOINT = `${API_BASE_URL}/api/commingevents`;
+const API_ENDPOINT = `${API_BASE_URL}/api/events`;
+const DEFAULT_EVENT_IMAGE = "/default-event.jpg";
+
+const resolveEventImage = (imageUrl) => {
+  if (!imageUrl) return DEFAULT_EVENT_IMAGE;
+
+  if (
+    imageUrl.startsWith("http://") ||
+    imageUrl.startsWith("https://") ||
+    imageUrl.startsWith("//")
+  ) {
+    return imageUrl;
+  }
+
+  if (imageUrl.startsWith("/")) {
+    return `${API_BASE_URL}${imageUrl}`;
+  }
+
+  return imageUrl;
+};
 
 const UpcomingEventsPreview = () => {
   const [events, setEvents] = useState([]);
@@ -31,14 +49,17 @@ const UpcomingEventsPreview = () => {
       setLoading(true);
       setError(null);
 
-      // Preview only: upcoming + 2 items (change to 3 if you want)
-      const res = await axios.get(`${API_ENDPOINT}?status=all&limit=2`);
+      const res = await axios.get(API_ENDPOINT, {
+        params: { status: "upcoming", limit: 2, page: 1 },
+      });
 
-      // Your API returns { events: [...] }
       setEvents(res.data?.events || []);
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.message || "Failed to load upcoming events. Please try again.");
+      setError(
+        err.response?.data?.message ||
+          "Failed to load upcoming events. Please try again."
+      );
     } finally {
       setLoading(false);
     }
@@ -71,7 +92,11 @@ const UpcomingEventsPreview = () => {
         });
 
       if (Notification.permission === "granted") notify();
-      else Notification.requestPermission().then((perm) => perm === "granted" && notify());
+      else {
+        Notification.requestPermission().then((perm) => {
+          if (perm === "granted") notify();
+        });
+      }
     }
   };
 
@@ -85,6 +110,12 @@ const UpcomingEventsPreview = () => {
     if (diffDays <= 7) return { label: "This Week", color: "bg-yellow-600/30 text-yellow-200" };
     return { label: "Upcoming", color: "bg-green-600/30 text-green-200" };
   };
+
+  const getEventDate = (event) => event?.dateStart || event?.date;
+  const getAttendeeCount = (event) =>
+    typeof event?.attendeesCount === "number"
+      ? event.attendeesCount
+      : event?.attendees?.length || 0;
 
   if (loading) {
     return (
@@ -124,7 +155,6 @@ const UpcomingEventsPreview = () => {
   return (
     <div className="bg-gradient-to-br from-blue-950 via-indigo-950 to-purple-950 text-white py-10 px-4 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-7xl xl:max-w-6xl 2xl:max-w-5xl">
-        {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
           <div>
             <h2 className="text-3xl sm:text-4xl font-bold mb-1">Upcoming Events</h2>
@@ -136,35 +166,34 @@ const UpcomingEventsPreview = () => {
           <div className="flex items-center gap-4 text-sm sm:text-base bg-white/10 backdrop-blur-md px-5 py-2.5 rounded-full">
             <Users size={18} />
             <span>
-              {events.reduce(
-                (sum, e) => sum + (e.attendeesCount || e.attendees?.length || 0),
-                0
-              )}{" "}
-              attending
+              {events.reduce((sum, e) => sum + getAttendeeCount(e), 0)} attending
             </span>
           </div>
         </div>
 
-        {/* Events Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 xl:gap-5 2xl:gap-4 mb-10">
           {events.slice(0, 2).map((event) => {
-            const when = event.dateStart || event.date; // supports both
+            const when = getEventDate(event);
             const status = getEventStatus(when);
             const hasReminder = !!reminders[event._id]?.enabled;
-            const attendeeCount = event.attendeesCount || event.attendees?.length || 0;
+            const attendeeCount = getAttendeeCount(event);
 
             return (
               <div
                 key={event._id}
-                className="
-                  group bg-gradient-to-br from-white/5 to-white/10 backdrop-blur-lg
-                  rounded-2xl p-6 sm:p-7 xl:p-5 2xl:p-4
-                  border border-white/10 hover:border-blue-500/40
-                  hover:shadow-xl hover:shadow-blue-500/10
-                  transition-all duration-300 hover:scale-[1.015]
-                "
+                className="group bg-gradient-to-br from-white/5 to-white/10 backdrop-blur-lg rounded-2xl p-6 sm:p-7 xl:p-5 2xl:p-4 border border-white/10 hover:border-blue-500/40 hover:shadow-xl hover:shadow-blue-500/10 transition-all duration-300 hover:scale-[1.015]"
               >
-                {/* Header with status & bell */}
+                <div className="mb-4 overflow-hidden rounded-xl">
+                  <img
+                    src={resolveEventImage(event.imageUrl)}
+                    alt={event.title}
+                    className="w-full h-52 object-cover"
+                    onError={(e) => {
+                      e.currentTarget.src = DEFAULT_EVENT_IMAGE;
+                    }}
+                  />
+                </div>
+
                 <div className="flex justify-between items-start mb-4">
                   <div className="flex flex-wrap gap-2">
                     <span className={`px-3 py-1 rounded-full text-xs font-medium ${status.color}`}>
@@ -191,17 +220,14 @@ const UpcomingEventsPreview = () => {
                   </button>
                 </div>
 
-                {/* Title */}
                 <h3 className="text-xl sm:text-2xl xl:text-xl 2xl:text-lg font-bold mb-2 sm:mb-3 line-clamp-2 group-hover:text-blue-200 transition-colors">
                   {event.title}
                 </h3>
 
-                {/* Description */}
                 <p className="text-white/80 text-base sm:text-lg xl:text-base 2xl:text-sm mb-5 sm:mb-6 line-clamp-3 leading-relaxed">
                   {event.description || event.shortDescription || "Join us for this special gathering."}
                 </p>
 
-                {/* Details */}
                 <div className="space-y-3 sm:space-y-4 text-white/80">
                   <div className="flex items-center gap-2.5 sm:gap-3 text-sm sm:text-base xl:text-sm 2xl:text-xs">
                     <CalendarDays size={18} className="flex-shrink-0 text-blue-300" />
@@ -233,7 +259,6 @@ const UpcomingEventsPreview = () => {
                     </div>
                   )}
 
-                  {/* Capacity / Attendees */}
                   {event.capacity > 0 && (
                     <div className="pt-4 border-t border-white/10 mt-3 sm:mt-4">
                       <div className="flex justify-between items-center text-sm sm:text-base mb-2">
@@ -242,7 +267,7 @@ const UpcomingEventsPreview = () => {
                           {attendeeCount} attending
                         </span>
                         <span className="text-white/60">
-                          {event.availableSpots ?? event.capacity - attendeeCount} spots left
+                          {(event.availableSpots ?? Math.max(0, event.capacity - attendeeCount))} spots left
                         </span>
                       </div>
 
@@ -262,15 +287,10 @@ const UpcomingEventsPreview = () => {
           })}
         </div>
 
-        {/* Footer */}
         <div className="text-center">
           <Link
             to="/upcomingEvents"
-            className="
-              inline-flex items-center gap-2 px-6 sm:px-7 py-3 rounded-xl font-semibold text-base sm:text-lg
-              bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700
-              shadow-lg hover:shadow-purple-500/30 transition-all duration-300 hover:scale-105 group
-            "
+            className="inline-flex items-center gap-2 px-6 sm:px-7 py-3 rounded-xl font-semibold text-base sm:text-lg bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-purple-500/30 transition-all duration-300 hover:scale-105 group"
           >
             View All Upcoming Events
             <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />

@@ -28,12 +28,30 @@ import {
 } from "lucide-react";
 
 const API_BASE_URL = import.meta.env.VITE_BASE_URL;
-const API_EVENTS_ENDPOINT = `${API_BASE_URL}/api/commingevents`;
+const API_EVENTS_ENDPOINT = `${API_BASE_URL}/api/events`;
+const DEFAULT_EVENT_IMAGE = "/default-event.jpg";
+
+const resolveEventImage = (imageUrl) => {
+  if (!imageUrl) return DEFAULT_EVENT_IMAGE;
+
+  if (
+    imageUrl.startsWith("http://") ||
+    imageUrl.startsWith("https://") ||
+    imageUrl.startsWith("//")
+  ) {
+    return imageUrl;
+  }
+
+  if (imageUrl.startsWith("/")) {
+    return `${API_BASE_URL}${imageUrl}`;
+  }
+
+  return imageUrl;
+};
 
 const UpcomingEventsPage = () => {
   const [events, setEvents] = useState([]);
   const [filteredEvents, setFilteredEvents] = useState([]);
-
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -47,18 +65,20 @@ const UpcomingEventsPage = () => {
   const [viewMode, setViewMode] = useState("grid");
   const [filters, setFilters] = useState({
     category: "all",
-    timeframe: "upcoming", // upcoming|past|all
+    timeframe: "upcoming",
     search: "",
-    featured: "all", // all|featured|regular
+    featured: "all",
     sortBy: "date_asc",
   });
 
   const [stats, setStats] = useState(null);
   const [notificationPermission, setNotificationPermission] = useState("default");
 
-  // --- auth (use real token/user if available, else demo fallback) ---
   const auth = useMemo(() => {
-    const token = localStorage.getItem("token") || localStorage.getItem("accessToken") || null;
+    const token =
+      localStorage.getItem("token") ||
+      localStorage.getItem("accessToken") ||
+      null;
 
     let storedUser = null;
     try {
@@ -72,7 +92,6 @@ const UpcomingEventsPage = () => {
     return { token, user: { id, name, email } };
   }, []);
 
-  // Styles (unchanged)
   const styles = useMemo(
     () => ({
       container: "min-h-screen bg-gradient-to-b from-gray-50 to-blue-50",
@@ -84,7 +103,6 @@ const UpcomingEventsPage = () => {
         tomorrow: "bg-red-100 text-red-800",
         thisWeek: "bg-yellow-100 text-yellow-800",
         past: "bg-gray-100 text-gray-800",
-        featured: "bg-purple-100 text-purple-800",
       },
       notification: {
         success: "bg-green-50 border-l-4 border-green-500 text-green-800",
@@ -96,12 +114,14 @@ const UpcomingEventsPage = () => {
     []
   );
 
-  // ---- helpers for commingevents schema (dateStart/dateEnd) ----
   const getEventDate = useCallback((e) => e?.dateStart || e?.date, []);
   const getEventEndDate = useCallback((e) => e?.dateEnd || e?.endDate || null, []);
 
   const getAttendeeCount = useCallback(
-    (e) => (typeof e?.attendeesCount === "number" ? e.attendeesCount : e?.attendees?.length || 0),
+    (e) =>
+      typeof e?.attendeesCount === "number"
+        ? e.attendeesCount
+        : e?.attendees?.length || 0,
     []
   );
 
@@ -120,15 +140,20 @@ const UpcomingEventsPage = () => {
       const date = new Date(eventDate);
       const diffDays = Math.ceil((date - now) / (1000 * 60 * 60 * 24));
 
-      if (date < now) return { label: "Past", style: styles.badge.past, days: diffDays };
-      if (diffDays <= 1) return { label: "Tomorrow", style: styles.badge.tomorrow, days: diffDays };
-      if (diffDays <= 7) return { label: "This Week", style: styles.badge.thisWeek, days: diffDays };
+      if (date < now) {
+        return { label: "Past", style: styles.badge.past, days: diffDays };
+      }
+      if (diffDays <= 1) {
+        return { label: "Tomorrow", style: styles.badge.tomorrow, days: diffDays };
+      }
+      if (diffDays <= 7) {
+        return { label: "This Week", style: styles.badge.thisWeek, days: diffDays };
+      }
       return { label: "Upcoming", style: styles.badge.upcoming, days: diffDays };
     },
     [styles.badge]
   );
 
-  // ✅ IMPORTANT: define filterEvents BEFORE useEffect that uses it
   const filterEvents = useCallback(() => {
     let filtered = [...events];
 
@@ -136,8 +161,13 @@ const UpcomingEventsPage = () => {
       filtered = filtered.filter((e) => e.category === filters.category);
     }
 
-    if (filters.featured === "featured") filtered = filtered.filter((e) => !!e.isFeatured);
-    if (filters.featured === "regular") filtered = filtered.filter((e) => !e.isFeatured);
+    if (filters.featured === "featured") {
+      filtered = filtered.filter((e) => !!e.isFeatured);
+    }
+
+    if (filters.featured === "regular") {
+      filtered = filtered.filter((e) => !e.isFeatured);
+    }
 
     if (filters.search) {
       const s = filters.search.toLowerCase();
@@ -146,6 +176,7 @@ const UpcomingEventsPage = () => {
         return (
           (e.title || "").toLowerCase().includes(s) ||
           (e.description || "").toLowerCase().includes(s) ||
+          (e.shortDescription || "").toLowerCase().includes(s) ||
           (e.verse || "").toLowerCase().includes(s) ||
           (e.location || "").toLowerCase().includes(s) ||
           tags.some((t) => String(t).toLowerCase().includes(s))
@@ -174,7 +205,6 @@ const UpcomingEventsPage = () => {
     setFilteredEvents(filtered);
   }, [events, filters, getEventDate, getAttendeeCount]);
 
-  // ---- data fetch ----
   const fetchEvents = useCallback(async () => {
     try {
       setLoading(true);
@@ -188,7 +218,9 @@ const UpcomingEventsPage = () => {
 
       setEvents(res.data?.events || []);
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to load events. Please try again.");
+      setError(
+        err.response?.data?.message || "Failed to load events. Please try again."
+      );
       console.error(err);
     } finally {
       setLoading(false);
@@ -201,18 +233,20 @@ const UpcomingEventsPage = () => {
   }, []);
 
   const checkNotificationPermission = useCallback(() => {
-    if ("Notification" in window) setNotificationPermission(Notification.permission);
+    if ("Notification" in window) {
+      setNotificationPermission(Notification.permission);
+    }
   }, []);
 
-  // ---- notifications ----
   const showNotification = useCallback((message, type = "info") => {
     const id = Date.now();
     const n = { id, message, type, timestamp: new Date() };
     setNotifications((prev) => [n, ...prev.slice(0, 4)]);
-    setTimeout(() => setNotifications((prev) => prev.filter((x) => x.id !== id)), 5000);
+    setTimeout(() => {
+      setNotifications((prev) => prev.filter((x) => x.id !== id));
+    }, 5000);
   }, []);
 
-  // RSVP toggle: POST /api/commingevents/:id/rsvp (token required)
   const handleRegister = useCallback(
     async (eventId) => {
       try {
@@ -234,7 +268,10 @@ const UpcomingEventsPage = () => {
           (a) => String(a.userId) === String(auth.user.id)
         );
 
-        showNotification(nowRegistered ? "RSVP confirmed!" : "RSVP removed.", "success");
+        showNotification(
+          nowRegistered ? "RSVP confirmed!" : "RSVP removed.",
+          "success"
+        );
       } catch (err) {
         showNotification(err.response?.data?.message || "RSVP failed", "error");
       }
@@ -244,7 +281,9 @@ const UpcomingEventsPage = () => {
 
   const scheduleBrowserNotification = useCallback(
     (event, reminderTime) => {
-      if (!("Notification" in window) || Notification.permission !== "granted") return;
+      if (!("Notification" in window) || Notification.permission !== "granted") {
+        return;
+      }
 
       const now = new Date();
       const delay = reminderTime.getTime() - now.getTime();
@@ -287,7 +326,10 @@ const UpcomingEventsPage = () => {
       setReminders(newReminders);
       localStorage.setItem("eventReminders", JSON.stringify(newReminders));
       scheduleBrowserNotification(event, reminderTime);
-      showNotification(`Reminder set for 24 hours before "${event.title}"`, "success");
+      showNotification(
+        `Reminder set for 24 hours before "${event.title}"`,
+        "success"
+      );
     },
     [events, reminders, getEventDate, scheduleBrowserNotification, showNotification]
   );
@@ -309,8 +351,9 @@ const UpcomingEventsPage = () => {
       if (!event) return;
 
       const next = { ...bookmarks };
-      if (next[eventId]) delete next[eventId];
-      else {
+      if (next[eventId]) {
+        delete next[eventId];
+      } else {
         next[eventId] = {
           eventId,
           eventTitle: event.title,
@@ -334,7 +377,9 @@ const UpcomingEventsPage = () => {
     try {
       const p = await Notification.requestPermission();
       setNotificationPermission(p);
-      if (p === "granted") showNotification("Browser notifications enabled!", "success");
+      if (p === "granted") {
+        showNotification("Browser notifications enabled!", "success");
+      }
     } catch {
       showNotification("Failed to enable notifications", "error");
     }
@@ -443,7 +488,6 @@ const UpcomingEventsPage = () => {
     w.print();
   }, [filteredEvents, getEventDate]);
 
-  // ---- mount ----
   useEffect(() => {
     loadUserData();
     checkNotificationPermission();
@@ -453,12 +497,10 @@ const UpcomingEventsPage = () => {
     fetchEvents();
   }, [fetchEvents]);
 
-  // ✅ now safe: filterEvents exists before this effect runs/evaluates deps
   useEffect(() => {
     filterEvents();
   }, [filterEvents]);
 
-  // compute stats from loaded events
   useEffect(() => {
     const now = new Date();
     const upcoming = events.filter((e) => new Date(getEventDate(e)) >= now).length;
@@ -474,7 +516,6 @@ const UpcomingEventsPage = () => {
     });
   }, [events, getEventDate, getAttendeeCount]);
 
-  // ---- components ----
   const NotificationToast = ({ notification }) => (
     <div
       className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg ${styles.notification[notification.type]} animate-slideIn`}
@@ -492,22 +533,27 @@ const UpcomingEventsPage = () => {
     const attendeeCount = getAttendeeCount(event);
     const availableSpots = getAvailableSpots(event);
 
-    const isRegistered = event.attendees?.some((a) => String(a.userId) === String(auth.user.id));
+    const isRegistered = event.attendees?.some(
+      (a) => String(a.userId) === String(auth.user.id)
+    );
     const hasReminder = reminders[event._id]?.enabled;
     const isBookmarked = !!bookmarks[event._id];
 
-    const daysUntil = Math.ceil((new Date(when) - new Date()) / (1000 * 60 * 60 * 24));
+    const daysUntil = Math.ceil(
+      (new Date(when) - new Date()) / (1000 * 60 * 60 * 24)
+    );
 
     return (
       <div className={`${styles.card} ${styles.cardHover}`}>
         <div className="relative h-48 overflow-hidden">
-          {event.imageUrl && (
-            <img
-              src={`${API_BASE_URL}${event.imageUrl}`}
-              alt={event.title}
-              className="w-full h-48 object-cover"
-            />
-          )}
+          <img
+            src={resolveEventImage(event.imageUrl)}
+            alt={event.title}
+            className="w-full h-48 object-cover"
+            onError={(e) => {
+              e.currentTarget.src = DEFAULT_EVENT_IMAGE;
+            }}
+          />
 
           <div className="absolute top-3 left-3 flex flex-col gap-1">
             <span className={`px-3 py-1 rounded-full text-xs font-semibold ${status.style}`}>
@@ -524,7 +570,9 @@ const UpcomingEventsPage = () => {
             <button
               onClick={() => handleBookmark(event._id)}
               className={`p-2 rounded-full ${
-                isBookmarked ? "bg-yellow-500 text-white" : "bg-white/80 text-gray-700 hover:bg-white"
+                isBookmarked
+                  ? "bg-yellow-500 text-white"
+                  : "bg-white/80 text-gray-700 hover:bg-white"
               }`}
               title={isBookmarked ? "Remove bookmark" : "Bookmark event"}
             >
@@ -546,7 +594,9 @@ const UpcomingEventsPage = () => {
             <h3 className="text-xl font-bold text-gray-900 line-clamp-1">{event.title}</h3>
             <div className="flex items-center text-sm text-gray-500 mt-1">
               <Tag size={12} className="mr-1" />
-              <span className="capitalize">{String(event.category || "general").replace("_", " ")}</span>
+              <span className="capitalize">
+                {String(event.category || "general").replace("_", " ")}
+              </span>
             </div>
           </div>
 
@@ -572,7 +622,10 @@ const UpcomingEventsPage = () => {
               </span>
               <span className="mx-1">•</span>
               <span className="text-sm">
-                {new Date(when).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                {new Date(when).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
               </span>
             </div>
 
@@ -588,7 +641,9 @@ const UpcomingEventsPage = () => {
                 <Users size={16} className="mr-2" />
                 <span className="text-sm">
                   {attendeeCount} attending
-                  {event.capacity > 0 && <span className="ml-1 text-gray-500">({availableSpots} left)</span>}
+                  {event.capacity > 0 && (
+                    <span className="ml-1 text-gray-500">({availableSpots} left)</span>
+                  )}
                 </span>
               </div>
 
@@ -613,7 +668,10 @@ const UpcomingEventsPage = () => {
             </button>
 
             {isRegistered ? (
-              <button className="px-3 py-2 bg-green-100 text-green-800 rounded-lg flex items-center" disabled>
+              <button
+                className="px-3 py-2 bg-green-100 text-green-800 rounded-lg flex items-center"
+                disabled
+              >
                 <CheckCircle size={16} className="mr-1" />
                 Registered
               </button>
@@ -656,17 +714,23 @@ const UpcomingEventsPage = () => {
     const when = getEventDate(event);
     const status = getEventStatus(when);
     const attendeeCount = getAttendeeCount(event);
-    const isRegistered = event.attendees?.some((a) => String(a.userId) === String(auth.user.id));
+    const isRegistered = event.attendees?.some(
+      (a) => String(a.userId) === String(auth.user.id)
+    );
 
     return (
       <div className={`${styles.card} flex`}>
         <div className="w-32 flex-shrink-0">
           <img
-            src={event.imageUrl ? `${API_BASE_URL}${event.imageUrl}` : "/default-event.jpg"}
+            src={resolveEventImage(event.imageUrl)}
             alt={event.title}
             className="w-full h-full object-cover"
+            onError={(e) => {
+              e.currentTarget.src = DEFAULT_EVENT_IMAGE;
+            }}
           />
         </div>
+
         <div className="flex-1 p-4">
           <div className="flex justify-between items-start">
             <div>
@@ -685,14 +749,21 @@ const UpcomingEventsPage = () => {
                 </span>
               </div>
             </div>
+
             <div className="flex gap-2">
               <button
                 onClick={() => handleBookmark(event._id)}
                 className={`p-1 ${bookmarks[event._id] ? "text-yellow-500" : "text-gray-400"}`}
               >
-                <Bookmark size={18} fill={bookmarks[event._id] ? "currentColor" : "none"} />
+                <Bookmark
+                  size={18}
+                  fill={bookmarks[event._id] ? "currentColor" : "none"}
+                />
               </button>
-              <button onClick={() => handleShareEvent(event)} className="p-1 text-gray-400 hover:text-gray-600">
+              <button
+                onClick={() => handleShareEvent(event)}
+                className="p-1 text-gray-400 hover:text-gray-600"
+              >
                 <Share2 size={18} />
               </button>
             </div>
@@ -709,7 +780,10 @@ const UpcomingEventsPage = () => {
             </span>
             <span className="flex items-center">
               <Clock size={14} className="mr-1" />
-              {new Date(when).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+              {new Date(when).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
             </span>
             {event.location && (
               <span className="flex items-center">
@@ -753,7 +827,6 @@ const UpcomingEventsPage = () => {
     const when = getEventDate(selectedEvent);
     const endWhen = getEventEndDate(selectedEvent);
     const status = getEventStatus(when);
-
     const attendeeCount = getAttendeeCount(selectedEvent);
 
     const isRegistered = selectedEvent.attendees?.some(
@@ -795,13 +868,14 @@ const UpcomingEventsPage = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
               <div className="md:col-span-2">
-                {selectedEvent.imageUrl && (
-                  <img
-                    src={`${API_BASE_URL}${selectedEvent.imageUrl}`}
-                    alt={selectedEvent.title}
-                    className="w-full h-48 object-cover rounded mb-4"
-                  />
-                )}
+                <img
+                  src={resolveEventImage(selectedEvent.imageUrl)}
+                  alt={selectedEvent.title}
+                  className="w-full h-48 object-cover rounded mb-4"
+                  onError={(e) => {
+                    e.currentTarget.src = DEFAULT_EVENT_IMAGE;
+                  }}
+                />
               </div>
 
               <div className="space-y-4">
@@ -891,7 +965,10 @@ const UpcomingEventsPage = () => {
 
             <div className="flex flex-wrap gap-3">
               {isRegistered ? (
-                <button className="px-6 py-2 bg-green-100 text-green-800 rounded-lg flex items-center" disabled>
+                <button
+                  className="px-6 py-2 bg-green-100 text-green-800 rounded-lg flex items-center"
+                  disabled
+                >
                   <CheckCircle size={18} className="mr-2" />
                   Already Registered
                 </button>
@@ -933,10 +1010,16 @@ const UpcomingEventsPage = () => {
               <button
                 onClick={() => handleBookmark(selectedEvent._id)}
                 className={`px-6 py-2 rounded-lg flex items-center ${
-                  bookmarks[selectedEvent._id] ? "bg-yellow-100 text-yellow-800" : "bg-gray-100 text-gray-800 hover:bg-gray-200"
+                  bookmarks[selectedEvent._id]
+                    ? "bg-yellow-100 text-yellow-800"
+                    : "bg-gray-100 text-gray-800 hover:bg-gray-200"
                 }`}
               >
-                <Bookmark size={18} className="mr-2" fill={bookmarks[selectedEvent._id] ? "currentColor" : "none"} />
+                <Bookmark
+                  size={18}
+                  className="mr-2"
+                  fill={bookmarks[selectedEvent._id] ? "currentColor" : "none"}
+                />
                 {bookmarks[selectedEvent._id] ? "Bookmarked" : "Bookmark"}
               </button>
             </div>
@@ -1000,7 +1083,9 @@ const UpcomingEventsPage = () => {
                   <input
                     type="text"
                     value={filters.search}
-                    onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+                    onChange={(e) =>
+                      setFilters({ ...filters, search: e.target.value })
+                    }
                     placeholder="Search events..."
                     className="w-full pl-4 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
@@ -1010,10 +1095,13 @@ const UpcomingEventsPage = () => {
               <div>
                 <select
                   value={filters.category}
-                  onChange={(e) => setFilters({ ...filters, category: e.target.value })}
+                  onChange={(e) =>
+                    setFilters({ ...filters, category: e.target.value })
+                  }
                   className="w-full p-2 border rounded-lg bg-white text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="all">All Categories</option>
+                  <option value="general">General</option>
                   <option value="worship">Worship</option>
                   <option value="bible_study">Bible Study</option>
                   <option value="prayer">Prayer</option>
@@ -1021,6 +1109,8 @@ const UpcomingEventsPage = () => {
                   <option value="choir">Choir</option>
                   <option value="training">Training</option>
                   <option value="baptism">Baptism</option>
+                  <option value="fellowship">Fellowship</option>
+                  <option value="outreach">Outreach</option>
                   <option value="other">Other</option>
                 </select>
               </div>
@@ -1028,7 +1118,9 @@ const UpcomingEventsPage = () => {
               <div>
                 <select
                   value={filters.timeframe}
-                  onChange={(e) => setFilters({ ...filters, timeframe: e.target.value })}
+                  onChange={(e) =>
+                    setFilters({ ...filters, timeframe: e.target.value })
+                  }
                   className="w-full p-2 border rounded-lg bg-white text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="upcoming">Upcoming</option>
@@ -1040,7 +1132,9 @@ const UpcomingEventsPage = () => {
               <div>
                 <select
                   value={filters.featured}
-                  onChange={(e) => setFilters({ ...filters, featured: e.target.value })}
+                  onChange={(e) =>
+                    setFilters({ ...filters, featured: e.target.value })
+                  }
                   className="w-full p-2 border rounded-lg bg-white text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="all">All Events</option>
@@ -1054,7 +1148,9 @@ const UpcomingEventsPage = () => {
               <div>
                 <select
                   value={filters.sortBy}
-                  onChange={(e) => setFilters({ ...filters, sortBy: e.target.value })}
+                  onChange={(e) =>
+                    setFilters({ ...filters, sortBy: e.target.value })
+                  }
                   className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="date_asc">Date (Earliest First)</option>
@@ -1069,7 +1165,9 @@ const UpcomingEventsPage = () => {
                 <button
                   onClick={() => setViewMode("grid")}
                   className={`p-2 rounded-lg ${
-                    viewMode === "grid" ? "bg-blue-100 text-blue-600" : "bg-gray-100 text-gray-600"
+                    viewMode === "grid"
+                      ? "bg-blue-100 text-blue-600"
+                      : "bg-gray-100 text-gray-600"
                   }`}
                 >
                   <Grid size={20} />
@@ -1077,7 +1175,9 @@ const UpcomingEventsPage = () => {
                 <button
                   onClick={() => setViewMode("list")}
                   className={`p-2 rounded-lg ${
-                    viewMode === "list" ? "bg-blue-100 text-blue-600" : "bg-gray-100 text-gray-600"
+                    viewMode === "list"
+                      ? "bg-blue-100 text-blue-600"
+                      : "bg-gray-100 text-gray-600"
                   }`}
                 >
                   <List size={20} />
