@@ -12,7 +12,7 @@ import ChoirsPage from "./pages/choirPage.jsx";
 import UpcomingEventsPage from "./pages/UpcomingngEventsPage.jsx";
 import BibleStudyPage from "./pages/bibleStudyPage.jsx";
 import BaptismPage from "./pages/baptismPage.jsx";
-import { AuthProvider } from "../src/context/authContext.jsx";
+import { AuthProvider } from "../src/context/AuthContext.jsx";
 import TubePage from "./pages/tubePage.jsx";
 import AdminRoute from "./components/adminSermonsRoute.jsx";
 import AdminSermonPage from "./admin/uploadSermons.jsx";
