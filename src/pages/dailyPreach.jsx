@@ -1,6 +1,6 @@
 import Header from "../components/header.jsx";
 import DailyPreaching from "../components/DailyPreachings.jsx";
-import Footer from "../components/Footer.jsx";
+import Footer from "../components/footer.jsx";
 
 const DailyWordPage = () => {
   return (

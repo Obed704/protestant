@@ -2,7 +2,7 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import EnhancedHeader from "../components/header.jsx";
-import Footer from "../components/Footer.jsx";
+import Footer from "../components/footer.jsx";
 import { AuthContext } from "../context/authContext.jsx";
 import { Search, UserPlus, ArrowLeft, Palette } from "lucide-react";
 import { useNavigate } from "react-router-dom";

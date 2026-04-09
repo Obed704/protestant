@@ -20,7 +20,7 @@ import {
   FaBars,
 } from "react-icons/fa";
 import Header from "../components/header.jsx";
-import Footer from "../components/Footer.jsx";
+import Footer from "../components/footer.jsx";
 
 const API_BASE_URL =
   import.meta.env.VITE_BASE_URL || import.meta.env.VITE_API_URL;

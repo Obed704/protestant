@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState, useMemo } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import EnhancedHeader from "../components/header.jsx";
-import Footer from "../components/Footer.jsx";
+import Footer from "../components/footer.jsx";
 import BaptismNav from "../components/BaptismNav.jsx";
 import { AuthContext } from "../context/authContext.jsx";
 import {

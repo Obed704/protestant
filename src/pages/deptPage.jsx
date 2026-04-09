@@ -1,6 +1,6 @@
 import Header from "../components/header.jsx";
 import DepartmentDetail from "../components/deptDetails.jsx";
-import Footer from "../components/Footer.jsx";
+import Footer from "../components/footer.jsx";
 
 const DeptPage = () => {
   return (

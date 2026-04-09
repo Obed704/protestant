@@ -40,7 +40,7 @@ import {
 } from "react-icons/fa";
 import axios from "axios";
 import Header from "../components/header.jsx";
-import Footer from "../components/Footer.jsx";
+import Footer from "../components/footer.jsx";
 import html2pdf from "html2pdf.js/dist/html2pdf.bundle.min.js";
 
 const API_BASE_URL = import.meta.env.VITE_BASE_URL;
