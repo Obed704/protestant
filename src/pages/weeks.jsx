@@ -1,5 +1,5 @@
 import React from "react"; // Add this
-import Header from "../components/Header.jsx";
+import Header from "../components/header.jsx";
 import WeekThemeSlideshow from "./weeksPage.jsx";
 import Footer from "../components/Footer.jsx";
 

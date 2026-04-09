@@ -9,7 +9,7 @@ import React, {
 } from "react";
 import axios from "axios";
 import { AuthContext } from "../context/authContext.jsx";
-import Header from "../components/Header.jsx";
+import Header from "../components/header.jsx";
 
 import { createSocket } from "../utils/socket.js";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";

@@ -1,5 +1,5 @@
 import LargeVideos from "../components/largeVideos.jsx";
-import Header from "../components/Header.jsx";
+import Header from "../components/header.jsx";
 import Sidebar from "../components/sidebar.jsx";
 
 export default function LargeVideosPage() {

@@ -1,6 +1,6 @@
 import React, { useState, useContext, useEffect, useRef, useMemo } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { AuthContext } from "../../src/context/authContext.jsx";
+import { AuthContext } from "../context/authContext.jsx";
 import Logo from "../assets/img/logo.jpg";
 import {
   FiVideo,

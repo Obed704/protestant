@@ -1,8 +1,8 @@
 import Tube from "../components/tube.jsx";
-import Header from "../components/Header.jsx";
+import Header from "../components/header.jsx";
 import Sidebar from "../components/sidebar.jsx";
 
-export default function TubePage(){
+export default function TubePage() {
   return (
     <div className="flex flex-col h-screen">
       {/* Header */}
@@ -22,5 +22,4 @@ export default function TubePage(){
       </div>
     </div>
   );
-};
-
+}

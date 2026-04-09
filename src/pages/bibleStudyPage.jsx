@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
-import Header from "../components/Header.jsx";
+import Header from "../components/header.jsx";
 import Footer from "../components/Footer.jsx";
 import {
   Search,

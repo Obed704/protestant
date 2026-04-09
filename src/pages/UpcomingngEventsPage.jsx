@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import axios from "axios";
-import EnhancedHeader from "../components/Header.jsx";
+import EnhancedHeader from "../components/header.jsx";
 import Footer from "../components/Footer.jsx";
 import {
   CalendarDays,

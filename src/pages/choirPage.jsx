@@ -19,7 +19,7 @@ import {
   FaChevronRight,
   FaBars,
 } from "react-icons/fa";
-import Header from "../components/Header.jsx";
+import Header from "../components/header.jsx";
 import Footer from "../components/Footer.jsx";
 
 const API_BASE_URL =
