@@ -1,7 +1,7 @@
 // src/pages/ProfilePage.jsx
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import axios from "axios";
-import { AuthContext } from "../context/authContext.jsx";
+import { AuthContext } from "../context/AuthContext.jsx";
 import EnhancedHeader from "../components/header.jsx";
 import Footer from "../components/footer.jsx";
 import { Palette } from "lucide-react";

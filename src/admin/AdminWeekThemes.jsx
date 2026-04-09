@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
-import { AuthContext } from "../context/authContext.jsx";
+import { AuthContext } from "../context/AuthContext.jsx";
 
 const API_BASE_URL = import.meta.env.VITE_BASE_URL;
 const API_ENDPOINT = `${API_BASE_URL}/api/weeks`;
@@ -56,7 +56,9 @@ export default function AdminWeekThemes() {
     } catch (err) {
       console.error("Error fetching weeks:", err?.response?.data || err);
       setWeeks([]);
-      alert(err.response?.data?.message || "Failed to load weeks. Check console.");
+      alert(
+        err.response?.data?.message || "Failed to load weeks. Check console.",
+      );
     } finally {
       setLoading(false);
     }
@@ -74,7 +76,7 @@ export default function AdminWeekThemes() {
   const buildPayload = () => ({
     weekNo: Number(form.weekNo),
     name: form.name?.trim() || "",
-   date: form.date, // backend will new Date(date) or null
+    date: form.date, // backend will new Date(date) or null
     theme: form.theme?.trim() || "",
     verse: form.verse?.trim() || "",
     purpose: form.purpose?.trim() || "",
@@ -98,17 +100,18 @@ export default function AdminWeekThemes() {
   };
 
   const handleAdd = async () => {
-
     if (!token) return alert("No token found. Please login again.");
     if (!form.weekNo) return alert("Week number is required.");
     if (!form.date) {
-  alert("Date is required.");
-  return;
-}
+      alert("Date is required.");
+      return;
+    }
 
     try {
       const payload = buildPayload();
-      const res = await axios.post(API_ENDPOINT, payload, { headers: authHeaders });
+      const res = await axios.post(API_ENDPOINT, payload, {
+        headers: authHeaders,
+      });
 
       // Your POST returns { success, message, data }
       if (!res.data?.success) {
@@ -220,13 +223,13 @@ export default function AdminWeekThemes() {
               className="border border-gray-300 p-4 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
             />
             <input
-  type="date"
-  name="date"
-  value={form.date || ""}
-  onChange={handleChange}
-  required
-  className="border border-gray-300 p-4 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-/>
+              type="date"
+              name="date"
+              value={form.date || ""}
+              onChange={handleChange}
+              required
+              className="border border-gray-300 p-4 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            />
             <input
               type="text"
               name="theme"
@@ -290,7 +293,9 @@ export default function AdminWeekThemes() {
         {!loading && weeks.length === 0 && (
           <div className="text-center py-16 bg-white rounded-2xl shadow-lg">
             <p className="text-2xl text-gray-500 mb-3">No week themes yet</p>
-            <p className="text-gray-400">Add your first week using the form above.</p>
+            <p className="text-gray-400">
+              Add your first week using the form above.
+            </p>
           </div>
         )}
 
@@ -313,7 +318,9 @@ export default function AdminWeekThemes() {
 
                 <p className="text-gray-600 mb-3">
                   <strong>Date:</strong>{" "}
-                  {week.date ? new Date(week.date).toLocaleDateString() : "Not set"}
+                  {week.date
+                    ? new Date(week.date).toLocaleDateString()
+                    : "Not set"}
                 </p>
 
                 <p className="text-lg italic text-blue-700 mb-4">

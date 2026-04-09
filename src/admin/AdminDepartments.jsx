@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext, useMemo } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
-import { AuthContext } from "../context/authContext.jsx";
+import { AuthContext } from "../context/AuthContext.jsx";
 import {
   FiPlus,
   FiTrash2,
@@ -93,7 +93,7 @@ const AdminDepartments = () => {
 
   const authHeaders = useMemo(
     () => (token ? { Authorization: `Bearer ${token}` } : {}),
-    [token]
+    [token],
   );
 
   const fetchDepartments = async () => {
@@ -194,9 +194,13 @@ const AdminDepartments = () => {
       setSaving(true);
 
       if (editingId) {
-        await axios.put(`${API_BASE_URL}/api/departments/${editingId}`, payload, {
-          headers: authHeaders,
-        });
+        await axios.put(
+          `${API_BASE_URL}/api/departments/${editingId}`,
+          payload,
+          {
+            headers: authHeaders,
+          },
+        );
       } else {
         await axios.post(`${API_BASE_URL}/api/departments`, payload, {
           headers: authHeaders,
@@ -234,7 +238,8 @@ const AdminDepartments = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this department?")) return;
+    if (!window.confirm("Are you sure you want to delete this department?"))
+      return;
 
     try {
       await axios.delete(`${API_BASE_URL}/api/departments/${id}`, {
@@ -483,7 +488,8 @@ const AdminDepartments = () => {
                       className="w-full border border-slate-300 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                     <p className="text-xs text-slate-500 mt-2">
-                      This will be the main banner image at the top of the department page.
+                      This will be the main banner image at the top of the
+                      department page.
                     </p>
 
                     {formData.heroImage && (
@@ -502,7 +508,9 @@ const AdminDepartments = () => {
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="text-lg font-bold text-slate-800">Gallery Images</h3>
+                      <h3 className="text-lg font-bold text-slate-800">
+                        Gallery Images
+                      </h3>
                       <p className="text-sm text-slate-500">
                         Add department photos one by one.
                       </p>
@@ -551,7 +559,12 @@ const AdminDepartments = () => {
                             <select
                               value={img.type}
                               onChange={(e) =>
-                                updateArrayItem("gallery", index, "type", e.target.value)
+                                updateArrayItem(
+                                  "gallery",
+                                  index,
+                                  "type",
+                                  e.target.value,
+                                )
                               }
                               className="w-full border border-slate-300 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                             >
@@ -571,7 +584,12 @@ const AdminDepartments = () => {
                               type="text"
                               value={img.title}
                               onChange={(e) =>
-                                updateArrayItem("gallery", index, "title", e.target.value)
+                                updateArrayItem(
+                                  "gallery",
+                                  index,
+                                  "title",
+                                  e.target.value,
+                                )
                               }
                               placeholder="Image title"
                               className="w-full border border-slate-300 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -586,7 +604,12 @@ const AdminDepartments = () => {
                               type="url"
                               value={img.imageUrl}
                               onChange={(e) =>
-                                updateArrayItem("gallery", index, "imageUrl", e.target.value)
+                                updateArrayItem(
+                                  "gallery",
+                                  index,
+                                  "imageUrl",
+                                  e.target.value,
+                                )
                               }
                               placeholder="https://..."
                               className="w-full border border-slate-300 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -604,7 +627,7 @@ const AdminDepartments = () => {
                                   "gallery",
                                   index,
                                   "description",
-                                  e.target.value
+                                  e.target.value,
                                 )
                               }
                               placeholder="Short description"
@@ -636,7 +659,9 @@ const AdminDepartments = () => {
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="text-lg font-bold text-slate-800">Members</h3>
+                      <h3 className="text-lg font-bold text-slate-800">
+                        Members
+                      </h3>
                       <p className="text-sm text-slate-500">
                         Add full member profiles using simple fields.
                       </p>
@@ -686,7 +711,12 @@ const AdminDepartments = () => {
                               type="text"
                               value={member.name || ""}
                               onChange={(e) =>
-                                updateArrayItem("members", index, "name", e.target.value)
+                                updateArrayItem(
+                                  "members",
+                                  index,
+                                  "name",
+                                  e.target.value,
+                                )
                               }
                               placeholder="Full name"
                               className="w-full border border-slate-300 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -701,7 +731,12 @@ const AdminDepartments = () => {
                               type="text"
                               value={member.role || ""}
                               onChange={(e) =>
-                                updateArrayItem("members", index, "role", e.target.value)
+                                updateArrayItem(
+                                  "members",
+                                  index,
+                                  "role",
+                                  e.target.value,
+                                )
                               }
                               placeholder="Member role"
                               className="w-full border border-slate-300 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -716,7 +751,12 @@ const AdminDepartments = () => {
                               type="url"
                               value={member.imageUrl || ""}
                               onChange={(e) =>
-                                updateArrayItem("members", index, "imageUrl", e.target.value)
+                                updateArrayItem(
+                                  "members",
+                                  index,
+                                  "imageUrl",
+                                  e.target.value,
+                                )
                               }
                               placeholder="https://..."
                               className="w-full border border-slate-300 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -731,7 +771,12 @@ const AdminDepartments = () => {
                               type="text"
                               value={member.phone || ""}
                               onChange={(e) =>
-                                updateArrayItem("members", index, "phone", e.target.value)
+                                updateArrayItem(
+                                  "members",
+                                  index,
+                                  "phone",
+                                  e.target.value,
+                                )
                               }
                               placeholder="+250..."
                               className="w-full border border-slate-300 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -746,7 +791,12 @@ const AdminDepartments = () => {
                               type="email"
                               value={member.email || ""}
                               onChange={(e) =>
-                                updateArrayItem("members", index, "email", e.target.value)
+                                updateArrayItem(
+                                  "members",
+                                  index,
+                                  "email",
+                                  e.target.value,
+                                )
                               }
                               placeholder="member@email.com"
                               className="w-full border border-slate-300 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -760,7 +810,12 @@ const AdminDepartments = () => {
                             <textarea
                               value={member.bio || ""}
                               onChange={(e) =>
-                                updateArrayItem("members", index, "bio", e.target.value)
+                                updateArrayItem(
+                                  "members",
+                                  index,
+                                  "bio",
+                                  e.target.value,
+                                )
                               }
                               placeholder="Short member bio"
                               rows={3}
@@ -776,7 +831,11 @@ const AdminDepartments = () => {
                               type="url"
                               value={member.socials?.instagram || ""}
                               onChange={(e) =>
-                                updateNestedSocial(index, "instagram", e.target.value)
+                                updateNestedSocial(
+                                  index,
+                                  "instagram",
+                                  e.target.value,
+                                )
                               }
                               placeholder="https://instagram.com/..."
                               className="w-full border border-slate-300 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -791,7 +850,11 @@ const AdminDepartments = () => {
                               type="url"
                               value={member.socials?.facebook || ""}
                               onChange={(e) =>
-                                updateNestedSocial(index, "facebook", e.target.value)
+                                updateNestedSocial(
+                                  index,
+                                  "facebook",
+                                  e.target.value,
+                                )
                               }
                               placeholder="https://facebook.com/..."
                               className="w-full border border-slate-300 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -806,7 +869,11 @@ const AdminDepartments = () => {
                               type="url"
                               value={member.socials?.linkedin || ""}
                               onChange={(e) =>
-                                updateNestedSocial(index, "linkedin", e.target.value)
+                                updateNestedSocial(
+                                  index,
+                                  "linkedin",
+                                  e.target.value,
+                                )
                               }
                               placeholder="https://linkedin.com/..."
                               className="w-full border border-slate-300 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -836,7 +903,11 @@ const AdminDepartments = () => {
                               type="url"
                               value={member.socials?.whatsapp || ""}
                               onChange={(e) =>
-                                updateNestedSocial(index, "whatsapp", e.target.value)
+                                updateNestedSocial(
+                                  index,
+                                  "whatsapp",
+                                  e.target.value,
+                                )
                               }
                               placeholder="https://wa.me/..."
                               className="w-full border border-slate-300 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -866,7 +937,9 @@ const AdminDepartments = () => {
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="text-lg font-bold text-slate-800">Committee</h3>
+                      <h3 className="text-lg font-bold text-slate-800">
+                        Committee
+                      </h3>
                       <p className="text-sm text-slate-500">
                         Add committee leaders with their contacts and photos.
                       </p>
@@ -916,7 +989,12 @@ const AdminDepartments = () => {
                               type="text"
                               value={item.role || ""}
                               onChange={(e) =>
-                                updateArrayItem("committee", index, "role", e.target.value)
+                                updateArrayItem(
+                                  "committee",
+                                  index,
+                                  "role",
+                                  e.target.value,
+                                )
                               }
                               placeholder="e.g. Secretary"
                               className="w-full border border-slate-300 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -931,7 +1009,12 @@ const AdminDepartments = () => {
                               type="text"
                               value={item.name || ""}
                               onChange={(e) =>
-                                updateArrayItem("committee", index, "name", e.target.value)
+                                updateArrayItem(
+                                  "committee",
+                                  index,
+                                  "name",
+                                  e.target.value,
+                                )
                               }
                               placeholder="Full name"
                               className="w-full border border-slate-300 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -946,7 +1029,12 @@ const AdminDepartments = () => {
                               type="url"
                               value={item.imageUrl || ""}
                               onChange={(e) =>
-                                updateArrayItem("committee", index, "imageUrl", e.target.value)
+                                updateArrayItem(
+                                  "committee",
+                                  index,
+                                  "imageUrl",
+                                  e.target.value,
+                                )
                               }
                               placeholder="https://..."
                               className="w-full border border-slate-300 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -961,7 +1049,12 @@ const AdminDepartments = () => {
                               type="text"
                               value={item.phone || ""}
                               onChange={(e) =>
-                                updateArrayItem("committee", index, "phone", e.target.value)
+                                updateArrayItem(
+                                  "committee",
+                                  index,
+                                  "phone",
+                                  e.target.value,
+                                )
                               }
                               placeholder="+250..."
                               className="w-full border border-slate-300 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -976,7 +1069,12 @@ const AdminDepartments = () => {
                               type="email"
                               value={item.email || ""}
                               onChange={(e) =>
-                                updateArrayItem("committee", index, "email", e.target.value)
+                                updateArrayItem(
+                                  "committee",
+                                  index,
+                                  "email",
+                                  e.target.value,
+                                )
                               }
                               placeholder="email@example.com"
                               className="w-full border border-slate-300 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -1007,8 +1105,12 @@ const AdminDepartments = () => {
                   <div className="bg-slate-50 rounded-2xl p-4 border">
                     <div className="flex items-center justify-between mb-4">
                       <div>
-                        <h3 className="text-lg font-bold text-slate-800">Plans</h3>
-                        <p className="text-sm text-slate-500">Add plans one by one.</p>
+                        <h3 className="text-lg font-bold text-slate-800">
+                          Plans
+                        </h3>
+                        <p className="text-sm text-slate-500">
+                          Add plans one by one.
+                        </p>
                       </div>
                       <button
                         type="button"
@@ -1027,14 +1129,20 @@ const AdminDepartments = () => {
                             type="text"
                             value={plan}
                             onChange={(e) =>
-                              updateSimpleStringList("plans", index, e.target.value)
+                              updateSimpleStringList(
+                                "plans",
+                                index,
+                                e.target.value,
+                              )
                             }
                             placeholder={`Plan ${index + 1}`}
                             className="flex-1 border border-slate-300 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                           />
                           <button
                             type="button"
-                            onClick={() => removeSimpleStringListItem("plans", index)}
+                            onClick={() =>
+                              removeSimpleStringListItem("plans", index)
+                            }
                             className="px-4 rounded-xl bg-red-50 text-red-600 hover:bg-red-100"
                           >
                             <FiTrash2 />
@@ -1047,8 +1155,12 @@ const AdminDepartments = () => {
                   <div className="bg-slate-50 rounded-2xl p-4 border">
                     <div className="flex items-center justify-between mb-4">
                       <div>
-                        <h3 className="text-lg font-bold text-slate-800">Actions</h3>
-                        <p className="text-sm text-slate-500">Add actions one by one.</p>
+                        <h3 className="text-lg font-bold text-slate-800">
+                          Actions
+                        </h3>
+                        <p className="text-sm text-slate-500">
+                          Add actions one by one.
+                        </p>
                       </div>
                       <button
                         type="button"
@@ -1067,14 +1179,20 @@ const AdminDepartments = () => {
                             type="text"
                             value={action}
                             onChange={(e) =>
-                              updateSimpleStringList("actions", index, e.target.value)
+                              updateSimpleStringList(
+                                "actions",
+                                index,
+                                e.target.value,
+                              )
                             }
                             placeholder={`Action ${index + 1}`}
                             className="flex-1 border border-slate-300 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                           />
                           <button
                             type="button"
-                            onClick={() => removeSimpleStringListItem("actions", index)}
+                            onClick={() =>
+                              removeSimpleStringListItem("actions", index)
+                            }
                             className="px-4 rounded-xl bg-red-50 text-red-600 hover:bg-red-100"
                           >
                             <FiTrash2 />
@@ -1098,8 +1216,8 @@ const AdminDepartments = () => {
                       ? "Updating..."
                       : "Saving..."
                     : editingId
-                    ? "Update Department"
-                    : "Create Department"}
+                      ? "Update Department"
+                      : "Create Department"}
                 </button>
 
                 <button
@@ -1117,7 +1235,9 @@ const AdminDepartments = () => {
 
         <div className="mb-5 flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-slate-800">Existing Departments</h2>
+            <h2 className="text-2xl font-bold text-slate-800">
+              Existing Departments
+            </h2>
             <p className="text-slate-500 text-sm">
               Manage, edit, or delete departments below.
             </p>
@@ -1143,7 +1263,9 @@ const AdminDepartments = () => {
               )}
 
               <div className="p-5">
-                <h3 className="text-2xl font-bold mb-2 text-blue-700">{dept.name}</h3>
+                <h3 className="text-2xl font-bold mb-2 text-blue-700">
+                  {dept.name}
+                </h3>
 
                 <div className="space-y-1 text-sm text-slate-600 mb-3">
                   <p className="flex items-center gap-2">

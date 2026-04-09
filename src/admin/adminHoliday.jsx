@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect, useContext } from "react";
-import { AuthContext } from "../context/authContext.jsx";
+import { AuthContext } from "../context/AuthContext.jsx";
 import {
   FaTrash,
   FaEdit,
@@ -135,7 +134,7 @@ const AdminHolidayParticipants = () => {
       const updated = await res.json();
 
       setParticipants(
-        participants.map((p) => (p._id === id ? updated.participant : p))
+        participants.map((p) => (p._id === id ? updated.participant : p)),
       );
       setEditingId(null);
       toast.success("Participant updated successfully");
@@ -156,7 +155,7 @@ const AdminHolidayParticipants = () => {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(settings),
-        }
+        },
       );
       if (!res.ok) throw new Error("Failed to update settings");
       toast.success("Settings updated successfully!");
@@ -179,7 +178,7 @@ const AdminHolidayParticipants = () => {
 
   const toggleTabExpand = (index) => {
     setExpandedTabs((prev) =>
-      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
+      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index],
     );
   };
 
@@ -188,7 +187,7 @@ const AdminHolidayParticipants = () => {
     (p) =>
       p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       p.phone?.includes(searchTerm) ||
-      p.user?.fullName?.toLowerCase().includes(searchTerm.toLowerCase())
+      p.user?.fullName?.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   if (!user || !token)
@@ -689,13 +688,13 @@ const AdminHolidayParticipants = () => {
                                   <div>
                                     <p className="text-white">
                                       {new Date(
-                                        p.createdAt
+                                        p.createdAt,
                                       ).toLocaleDateString()}
                                     </p>
                                     <p className="text-xs text-gray-400">
                                       {new Date(p.createdAt).toLocaleTimeString(
                                         [],
-                                        { hour: "2-digit", minute: "2-digit" }
+                                        { hour: "2-digit", minute: "2-digit" },
                                       )}
                                     </p>
                                   </div>

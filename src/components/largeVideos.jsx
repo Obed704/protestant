@@ -17,10 +17,14 @@ import {
   FiSkipForward,
   FiStar,
 } from "react-icons/fi";
-import { AiOutlineLoading3Quarters, AiOutlineSearch, AiOutlineYoutube } from "react-icons/ai";
+import {
+  AiOutlineLoading3Quarters,
+  AiOutlineSearch,
+  AiOutlineYoutube,
+} from "react-icons/ai";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
-import { AuthContext } from "../context/authContext.jsx";
+import { AuthContext } from "../context/AuthContext.jsx";
 
 const API_BASE_URL = import.meta.env.VITE_BASE_URL;
 const API_ENDPOINT = `${API_BASE_URL}/api/largeVideo`;
@@ -69,7 +73,8 @@ const LargeVideos = () => {
   const styles = useMemo(
     () => ({
       gradientBg: "bg-gradient-to-br from-blue-950 via-blue-900/30 to-blue-950",
-      cardBg: "bg-gradient-to-br from-blue-900/40 to-blue-800/40 backdrop-blur-xl",
+      cardBg:
+        "bg-gradient-to-br from-blue-900/40 to-blue-800/40 backdrop-blur-xl",
       primaryBtn:
         "bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600",
       secondaryBtn:
@@ -80,7 +85,7 @@ const LargeVideos = () => {
           ? "bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-semibold shadow-lg shadow-blue-500/20"
           : "bg-blue-900/40 hover:bg-blue-800/60 text-blue-200",
     }),
-    []
+    [],
   );
 
   // Keep middleware/auth.js unchanged: send multiple styles
@@ -261,7 +266,9 @@ const LargeVideos = () => {
 
       const updated = await res.json();
       setActiveVideoDb(updated);
-      setVideos((prev) => prev.map((v) => (v._id === updated._id ? updated : v)));
+      setVideos((prev) =>
+        prev.map((v) => (v._id === updated._id ? updated : v)),
+      );
     } catch (err) {
       console.error("Like failed:", err);
     }
@@ -295,7 +302,9 @@ const LargeVideos = () => {
 
       const updated = await res.json();
       setActiveVideoDb(updated);
-      setVideos((prev) => prev.map((v) => (v._id === updated._id ? updated : v)));
+      setVideos((prev) =>
+        prev.map((v) => (v._id === updated._id ? updated : v)),
+      );
       setNewComment("");
     } catch (err) {
       console.error("Comment failed:", err);
@@ -369,14 +378,19 @@ const LargeVideos = () => {
     return () => document.removeEventListener("fullscreenchange", onFs);
   }, []);
 
-  const activeId = useMemo(() => getIdFromEmbedOrUrl(activeVideoDb), [activeVideoDb]);
+  const activeId = useMemo(
+    () => getIdFromEmbedOrUrl(activeVideoDb),
+    [activeVideoDb],
+  );
   const activeIsFav = useMemo(
     () => (activeVideoDb ? favoriteIds.has(String(activeVideoDb._id)) : false),
-    [activeVideoDb, favoriteIds]
+    [activeVideoDb, favoriteIds],
   );
 
   return (
-    <section className={`min-h-screen py-10 px-4 md:px-8 lg:px-12 ${styles.gradientBg} relative overflow-hidden`}>
+    <section
+      className={`min-h-screen py-10 px-4 md:px-8 lg:px-12 ${styles.gradientBg} relative overflow-hidden`}
+    >
       <div className="absolute inset-0 opacity-10">
         <div className="absolute top-10 left-1/4 w-80 h-80 bg-blue-500 rounded-full blur-3xl"></div>
         <div className="absolute bottom-10 right-1/4 w-96 h-96 bg-cyan-400 rounded-full blur-3xl"></div>
@@ -386,7 +400,11 @@ const LargeVideos = () => {
 
       <div className="relative z-10 max-w-7xl mx-auto">
         {/* Header */}
-        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
             <div>
               <div className="inline-flex items-center gap-3 mb-4 px-4 py-2 bg-blue-500/10 rounded-full border border-blue-500/20">
@@ -407,8 +425,12 @@ const LargeVideos = () => {
               </p>
             </div>
 
-            <div className={`${styles.cardBg} px-6 py-4 rounded-2xl border border-blue-700/30`}>
-              <div className="text-3xl font-bold text-white">{filteredVideos.length}</div>
+            <div
+              className={`${styles.cardBg} px-6 py-4 rounded-2xl border border-blue-700/30`}
+            >
+              <div className="text-3xl font-bold text-white">
+                {filteredVideos.length}
+              </div>
               <div className="text-blue-300 text-sm">
                 {scope === "favorites" ? "My Favorites" : "Videos"}
               </div>
@@ -417,7 +439,9 @@ const LargeVideos = () => {
         </motion.div>
 
         {/* Controls */}
-        <div className={`${styles.cardBg} rounded-2xl border border-blue-700/30 p-6 mb-8`}>
+        <div
+          className={`${styles.cardBg} rounded-2xl border border-blue-700/30 p-6 mb-8`}
+        >
           <div className="flex flex-col lg:flex-row gap-6 items-center justify-between">
             <div className="flex-1 w-full">
               <div className="relative group">
@@ -450,11 +474,15 @@ const LargeVideos = () => {
                 </span>
               </button>
 
-              <div className={`${styles.secondaryBtn} rounded-xl p-1 flex items-center`}>
+              <div
+                className={`${styles.secondaryBtn} rounded-xl p-1 flex items-center`}
+              >
                 <button
                   onClick={() => setViewMode("grid")}
                   className={`px-4 py-2 rounded-lg transition-all ${
-                    viewMode === "grid" ? "bg-blue-600 text-white" : "text-blue-300 hover:text-white"
+                    viewMode === "grid"
+                      ? "bg-blue-600 text-white"
+                      : "text-blue-300 hover:text-white"
                   }`}
                 >
                   <FiGrid className="text-lg" />
@@ -462,7 +490,9 @@ const LargeVideos = () => {
                 <button
                   onClick={() => setViewMode("list")}
                   className={`px-4 py-2 rounded-lg transition-all ${
-                    viewMode === "list" ? "bg-blue-600 text-white" : "text-blue-300 hover:text-white"
+                    viewMode === "list"
+                      ? "bg-blue-600 text-white"
+                      : "text-blue-300 hover:text-white"
                   }`}
                 >
                   <FiList className="text-lg" />
@@ -482,7 +512,9 @@ const LargeVideos = () => {
               <button
                 onClick={() => {
                   if (filteredVideos.length === 0) return;
-                  const shuffled = [...filteredVideos].sort(() => Math.random() - 0.5);
+                  const shuffled = [...filteredVideos].sort(
+                    () => Math.random() - 0.5,
+                  );
                   openPlayer(shuffled[0]);
                 }}
                 className={`${styles.primaryBtn} text-white px-4 py-2.5 rounded-xl flex items-center gap-2 hover:shadow-lg hover:shadow-blue-500/30 transition-all`}
@@ -497,13 +529,18 @@ const LargeVideos = () => {
         {/* Content */}
         {loading ? (
           <div className="flex flex-col items-center justify-center py-24">
-            <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }}>
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            >
               <AiOutlineLoading3Quarters className="text-4xl text-blue-300" />
             </motion.div>
             <p className="text-blue-300 mt-4">Loading videos...</p>
           </div>
         ) : filteredVideos.length === 0 ? (
-          <div className="text-center py-20 text-blue-200/80">No videos found.</div>
+          <div className="text-center py-20 text-blue-200/80">
+            No videos found.
+          </div>
         ) : viewMode === "grid" ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
             <AnimatePresence>
@@ -511,7 +548,9 @@ const LargeVideos = () => {
                 const vid = getIdFromEmbedOrUrl(v);
                 if (!vid) return null;
 
-                const thumb = v.thumbnail || `https://img.youtube.com/vi/${vid}/hqdefault.jpg`;
+                const thumb =
+                  v.thumbnail ||
+                  `https://img.youtube.com/vi/${vid}/hqdefault.jpg`;
                 const isFav = favoriteIds.has(String(v._id));
 
                 return (
@@ -524,7 +563,9 @@ const LargeVideos = () => {
                     className="group cursor-pointer"
                     onClick={() => openPlayer(v)}
                   >
-                    <div className={`${styles.cardBg} rounded-2xl overflow-hidden border border-blue-800/50 hover:border-blue-400/50 transition-all hover:shadow-2xl hover:shadow-blue-500/20 h-full flex flex-col`}>
+                    <div
+                      className={`${styles.cardBg} rounded-2xl overflow-hidden border border-blue-800/50 hover:border-blue-400/50 transition-all hover:shadow-2xl hover:shadow-blue-500/20 h-full flex flex-col`}
+                    >
                       <div className="relative aspect-video overflow-hidden bg-black">
                         <img
                           src={thumb}
@@ -543,7 +584,9 @@ const LargeVideos = () => {
                         <button
                           onClick={(e) => toggleFavorite(v._id, e)}
                           className={`absolute top-3 right-3 p-2 rounded-full backdrop-blur transition ${
-                            isFav ? "bg-yellow-400/90 text-black" : "bg-black/40 text-white hover:bg-yellow-400/70 hover:text-black"
+                            isFav
+                              ? "bg-yellow-400/90 text-black"
+                              : "bg-black/40 text-white hover:bg-yellow-400/70 hover:text-black"
                           }`}
                           title="Favorite"
                         >
@@ -559,7 +602,9 @@ const LargeVideos = () => {
                         <div className="flex items-center justify-between text-xs mt-auto text-blue-300/80">
                           <span className="flex items-center gap-2">
                             <FiUser />
-                            <span className="truncate max-w-[90px]">{v.uploader || "Unknown"}</span>
+                            <span className="truncate max-w-[90px]">
+                              {v.uploader || "Unknown"}
+                            </span>
                           </span>
 
                           <span className="flex items-center gap-3">
@@ -567,7 +612,8 @@ const LargeVideos = () => {
                               <FiHeart /> {formatNumber(v.likes || 0)}
                             </span>
                             <span className="flex items-center gap-1">
-                              <FiMessageCircle /> {formatNumber(v.comments?.length || 0)}
+                              <FiMessageCircle />{" "}
+                              {formatNumber(v.comments?.length || 0)}
                             </span>
                           </span>
                         </div>
@@ -584,7 +630,9 @@ const LargeVideos = () => {
               const vid = getIdFromEmbedOrUrl(v);
               if (!vid) return null;
 
-              const thumb = v.thumbnail || `https://img.youtube.com/vi/${vid}/hqdefault.jpg`;
+              const thumb =
+                v.thumbnail ||
+                `https://img.youtube.com/vi/${vid}/hqdefault.jpg`;
               const isFav = favoriteIds.has(String(v._id));
 
               return (
@@ -595,16 +643,29 @@ const LargeVideos = () => {
                 >
                   <div className="flex items-center p-4 cursor-pointer group">
                     <div className="relative w-32 h-20 rounded-lg overflow-hidden flex-shrink-0 bg-black">
-                      <img src={thumb} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                      <img
+                        src={thumb}
+                        alt=""
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      />
                     </div>
 
                     <div className="flex-1 ml-4 min-w-0">
-                      <h3 className="text-white font-semibold text-base mb-1 truncate">{v.title}</h3>
-                      <p className="text-blue-200/70 text-sm truncate">{v.description || "No description."}</p>
+                      <h3 className="text-white font-semibold text-base mb-1 truncate">
+                        {v.title}
+                      </h3>
+                      <p className="text-blue-200/70 text-sm truncate">
+                        {v.description || "No description."}
+                      </p>
 
                       <div className="flex items-center gap-4 text-xs text-blue-300/70 mt-2">
-                        <span className="flex items-center gap-1"><FiHeart /> {formatNumber(v.likes || 0)}</span>
-                        <span className="flex items-center gap-1"><FiMessageCircle /> {formatNumber(v.comments?.length || 0)}</span>
+                        <span className="flex items-center gap-1">
+                          <FiHeart /> {formatNumber(v.likes || 0)}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <FiMessageCircle />{" "}
+                          {formatNumber(v.comments?.length || 0)}
+                        </span>
                       </div>
                     </div>
 
@@ -612,7 +673,9 @@ const LargeVideos = () => {
                       <button
                         onClick={(e) => toggleFavorite(v._id, e)}
                         className={`p-2 rounded-lg transition ${
-                          isFav ? "bg-yellow-400/90 text-black" : "bg-blue-900/30 text-blue-200 hover:bg-yellow-400/50 hover:text-black"
+                          isFav
+                            ? "bg-yellow-400/90 text-black"
+                            : "bg-blue-900/30 text-blue-200 hover:bg-yellow-400/50 hover:text-black"
                         }`}
                         title="Favorite"
                       >
@@ -673,7 +736,9 @@ const LargeVideos = () => {
                       >
                         <span className="flex items-center gap-2">
                           <FiStar />
-                          <span className="hidden sm:inline">{activeIsFav ? "Favorited" : "Favorite"}</span>
+                          <span className="hidden sm:inline">
+                            {activeIsFav ? "Favorited" : "Favorite"}
+                          </span>
                         </span>
                       </button>
 
@@ -742,7 +807,11 @@ const LargeVideos = () => {
                                 className="w-11 h-11 rounded-full bg-blue-600/80 hover:bg-blue-500/90 flex items-center justify-center transition"
                                 title="UI play/pause"
                               >
-                                {isPlaying ? <FiPause className="text-xl text-white" /> : <FiPlay className="text-xl text-white ml-1" />}
+                                {isPlaying ? (
+                                  <FiPause className="text-xl text-white" />
+                                ) : (
+                                  <FiPlay className="text-xl text-white ml-1" />
+                                )}
                               </button>
 
                               <button
@@ -790,13 +859,22 @@ const LargeVideos = () => {
                           <div className="max-h-[260px] overflow-y-auto p-4 space-y-3">
                             {activeVideoDb.comments?.length ? (
                               activeVideoDb.comments.map((c, idx) => (
-                                <div key={idx} className="bg-blue-950/40 border border-blue-700/30 rounded-xl p-3">
-                                  <div className="text-white font-semibold text-sm">{c.user}</div>
-                                  <div className="text-blue-200/90 text-sm mt-1">{c.text}</div>
+                                <div
+                                  key={idx}
+                                  className="bg-blue-950/40 border border-blue-700/30 rounded-xl p-3"
+                                >
+                                  <div className="text-white font-semibold text-sm">
+                                    {c.user}
+                                  </div>
+                                  <div className="text-blue-200/90 text-sm mt-1">
+                                    {c.text}
+                                  </div>
                                 </div>
                               ))
                             ) : (
-                              <div className="text-blue-200/70 text-sm">No comments yet.</div>
+                              <div className="text-blue-200/70 text-sm">
+                                No comments yet.
+                              </div>
                             )}
                           </div>
 
@@ -807,13 +885,17 @@ const LargeVideos = () => {
                                 placeholder="Write a comment..."
                                 value={newComment}
                                 onChange={(e) => setNewComment(e.target.value)}
-                                onKeyDown={(e) => e.key === "Enter" && handleCommentSubmit()}
+                                onKeyDown={(e) =>
+                                  e.key === "Enter" && handleCommentSubmit()
+                                }
                               />
                               <button
                                 onClick={handleCommentSubmit}
                                 disabled={!newComment.trim()}
                                 className={`px-4 py-2 rounded-xl text-white flex items-center gap-2 ${
-                                  newComment.trim() ? styles.primaryBtn : "bg-blue-900/40 cursor-not-allowed"
+                                  newComment.trim()
+                                    ? styles.primaryBtn
+                                    : "bg-blue-900/40 cursor-not-allowed"
                                 }`}
                               >
                                 <FiSend />
@@ -835,13 +917,22 @@ const LargeVideos = () => {
                           <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3">
                             {activeVideoDb.comments?.length ? (
                               activeVideoDb.comments.map((c, idx) => (
-                                <div key={idx} className="bg-blue-950/40 border border-blue-700/30 rounded-xl p-3">
-                                  <div className="text-white font-semibold text-sm">{c.user}</div>
-                                  <div className="text-blue-200/90 text-sm mt-1">{c.text}</div>
+                                <div
+                                  key={idx}
+                                  className="bg-blue-950/40 border border-blue-700/30 rounded-xl p-3"
+                                >
+                                  <div className="text-white font-semibold text-sm">
+                                    {c.user}
+                                  </div>
+                                  <div className="text-blue-200/90 text-sm mt-1">
+                                    {c.text}
+                                  </div>
                                 </div>
                               ))
                             ) : (
-                              <div className="text-blue-200/70 text-sm">No comments yet.</div>
+                              <div className="text-blue-200/70 text-sm">
+                                No comments yet.
+                              </div>
                             )}
                           </div>
 
@@ -852,13 +943,17 @@ const LargeVideos = () => {
                                 placeholder="Write a comment..."
                                 value={newComment}
                                 onChange={(e) => setNewComment(e.target.value)}
-                                onKeyDown={(e) => e.key === "Enter" && handleCommentSubmit()}
+                                onKeyDown={(e) =>
+                                  e.key === "Enter" && handleCommentSubmit()
+                                }
                               />
                               <button
                                 onClick={handleCommentSubmit}
                                 disabled={!newComment.trim()}
                                 className={`px-4 py-2 rounded-xl text-white flex items-center gap-2 ${
-                                  newComment.trim() ? styles.primaryBtn : "bg-blue-900/40 cursor-not-allowed"
+                                  newComment.trim()
+                                    ? styles.primaryBtn
+                                    : "bg-blue-900/40 cursor-not-allowed"
                                 }`}
                               >
                                 <FiSend />

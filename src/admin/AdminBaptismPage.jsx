@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import EnhancedHeader from "../components/header.jsx";
 import Footer from "../components/footer.jsx";
 import BaptismNav from "../components/BaptismNav.jsx";
-import { AuthContext } from "../context/authContext.jsx";
+import { AuthContext } from "../context/AuthContext.jsx";
 import {
   Plus,
   Edit2,

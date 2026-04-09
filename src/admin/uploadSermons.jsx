@@ -1,6 +1,12 @@
 import React, { useState, useEffect, useContext } from "react";
-import { AuthContext } from "../context/authContext.jsx";
-import { FiEdit, FiTrash2, FiPlus, FiBookOpen, FiAlertCircle } from "react-icons/fi";
+import { AuthContext } from "../context/AuthContext.jsx";
+import {
+  FiEdit,
+  FiTrash2,
+  FiPlus,
+  FiBookOpen,
+  FiAlertCircle,
+} from "react-icons/fi";
 import axios from "axios";
 import { Link } from "react-router-dom";
 
@@ -31,10 +37,10 @@ const AdminSermonDashboard = () => {
       let sermonsArray = Array.isArray(data)
         ? data
         : Array.isArray(data?.sermons)
-        ? data.sermons
-        : Array.isArray(data?.data)
-        ? data.data
-        : [];
+          ? data.sermons
+          : Array.isArray(data?.data)
+            ? data.data
+            : [];
 
       setSermons(sermonsArray);
     } catch (err) {
@@ -87,7 +93,10 @@ const AdminSermonDashboard = () => {
       setEditingId(null);
       fetchSermons();
     } catch (err) {
-      showMessage(err.response?.data?.message || "Failed to save sermon", "error");
+      showMessage(
+        err.response?.data?.message || "Failed to save sermon",
+        "error",
+      );
     } finally {
       setSaving(false);
     }
@@ -110,7 +119,10 @@ const AdminSermonDashboard = () => {
       showMessage("Sermon deleted successfully");
       fetchSermons();
     } catch (err) {
-      showMessage(err.response?.data?.message || "Failed to delete sermon", "error");
+      showMessage(
+        err.response?.data?.message || "Failed to delete sermon",
+        "error",
+      );
     }
   };
 
@@ -127,7 +139,9 @@ const AdminSermonDashboard = () => {
           to="/admin"
           className="inline-flex items-center text-gray-600 hover:text-blue-700 mb-8 group"
         >
-          <span className="mr-2 transition-transform group-hover:-translate-x-1">←</span>
+          <span className="mr-2 transition-transform group-hover:-translate-x-1">
+            ←
+          </span>
           Back to Admin Dashboard
         </Link>
 
@@ -135,7 +149,9 @@ const AdminSermonDashboard = () => {
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
             Sermon Management
           </h1>
-          <p className="text-gray-600">Add, edit, or remove sermons visible to church members.</p>
+          <p className="text-gray-600">
+            Add, edit, or remove sermons visible to church members.
+          </p>
         </header>
 
         {message.text && (
@@ -189,7 +205,8 @@ const AdminSermonDashboard = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Sermon Content / Key Message <span className="text-red-500">*</span>
+                Sermon Content / Key Message{" "}
+                <span className="text-red-500">*</span>
               </label>
               <textarea
                 value={description}
@@ -201,7 +218,9 @@ const AdminSermonDashboard = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Preacher</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Preacher
+              </label>
               <input
                 type="text"
                 value={preacher}
@@ -218,11 +237,15 @@ const AdminSermonDashboard = () => {
                   saving
                     ? "bg-gray-400 text-white cursor-not-allowed"
                     : editingId
-                    ? "bg-yellow-600 hover:bg-yellow-700 text-white"
-                    : "bg-blue-600 hover:bg-blue-700 text-white"
+                      ? "bg-yellow-600 hover:bg-yellow-700 text-white"
+                      : "bg-blue-600 hover:bg-blue-700 text-white"
                 }`}
               >
-                {saving ? "Saving..." : editingId ? "Update Sermon" : "Publish Sermon"}
+                {saving
+                  ? "Saving..."
+                  : editingId
+                    ? "Update Sermon"
+                    : "Publish Sermon"}
               </button>
 
               {editingId && (
@@ -246,8 +269,12 @@ const AdminSermonDashboard = () => {
         ) : sermons.length === 0 ? (
           <div className="bg-white rounded-2xl shadow border border-gray-200 p-12 text-center">
             <FiBookOpen className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-            <h3 className="text-xl font-semibold text-gray-700 mb-2">No sermons yet</h3>
-            <p className="text-gray-500 mb-6">Start by adding your first sermon using the form above.</p>
+            <h3 className="text-xl font-semibold text-gray-700 mb-2">
+              No sermons yet
+            </h3>
+            <p className="text-gray-500 mb-6">
+              Start by adding your first sermon using the form above.
+            </p>
           </div>
         ) : (
           <div className="space-y-6">

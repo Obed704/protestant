@@ -8,7 +8,7 @@ import React, {
   useState,
 } from "react";
 import axios from "axios";
-import { AuthContext } from "../context/authContext.jsx";
+import { AuthContext } from "../context/AuthContext.jsx";
 import Header from "../components/header.jsx";
 
 import { createSocket } from "../utils/socket.js";

@@ -1,6 +1,6 @@
 import { useEffect, useContext } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { AuthContext } from "../context/authContext.jsx";
+import { AuthContext } from "../context/AuthContext.jsx";
 
 // Use your existing BASE_URL from .env → exposed with VITE_ prefix for frontend
 const API_BASE_URL = import.meta.env.VITE_BASE_URL;

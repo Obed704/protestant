@@ -4,9 +4,16 @@
 // 1) app.js must have:  app.use("/api/admin/videos", adminVideosRoutes)
 // 2) routes/adminVideos.js should have: router.use(verifyToken, verifyAdmin)  (protect ALL admin routes)
 
-import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useNavigate } from "react-router-dom";
-import { AuthContext } from "../context/authContext.jsx";
+import { AuthContext } from "../context/AuthContext.jsx";
 import {
   Plus,
   Search,
@@ -36,7 +43,12 @@ const Badge = ({ children, tone = "gray" }) => {
     blue: "bg-blue-600/20 text-blue-200 border-blue-600/30",
   };
   return (
-    <span className={cn("px-2 py-1 text-xs rounded-full border", tones[tone] || tones.gray)}>
+    <span
+      className={cn(
+        "px-2 py-1 text-xs rounded-full border",
+        tones[tone] || tones.gray,
+      )}
+    >
       {children}
     </span>
   );
@@ -69,7 +81,7 @@ const TextArea = (props) => (
     className={cn(
       "w-full rounded-xl bg-gray-900 border border-gray-800 px-4 py-3 text-white",
       "placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-600/60",
-      props.className
+      props.className,
     )}
   />
 );
@@ -80,7 +92,7 @@ const Input = (props) => (
     className={cn(
       "w-full rounded-xl bg-gray-900 border border-gray-800 px-4 py-3 text-white",
       "placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-600/60",
-      props.className
+      props.className,
     )}
   />
 );
@@ -91,7 +103,7 @@ const Select = (props) => (
     className={cn(
       "w-full rounded-xl bg-gray-900 border border-gray-800 px-4 py-3 text-white",
       "focus:outline-none focus:ring-2 focus:ring-blue-600/60",
-      props.className
+      props.className,
     )}
   />
 );
@@ -110,7 +122,7 @@ const Button = ({ children, className, tone = "default", ...props }) => {
       className={cn(
         "inline-flex items-center gap-2 rounded-xl border px-4 py-2 font-medium transition disabled:opacity-50 disabled:cursor-not-allowed",
         tones[tone] || tones.default,
-        className
+        className,
       )}
     >
       {children}
@@ -120,7 +132,12 @@ const Button = ({ children, className, tone = "default", ...props }) => {
 
 export default function AdminShortsPage() {
   const navigate = useNavigate();
-  const { user, token: ctxToken, authLoading, logout } = useContext(AuthContext);
+  const {
+    user,
+    token: ctxToken,
+    authLoading,
+    logout,
+  } = useContext(AuthContext);
 
   // token source of truth:
   const token = ctxToken || localStorage.getItem("token");
@@ -196,7 +213,7 @@ export default function AdminShortsPage() {
 
       return data;
     },
-    [authHeaders]
+    [authHeaders],
   );
 
   const fetchAdminVideos = useCallback(
@@ -224,7 +241,7 @@ export default function AdminShortsPage() {
         setLoading(false);
       }
     },
-    [api, authHeaders, q, status, page, limit]
+    [api, authHeaders, q, status, page, limit],
   );
 
   // Reset page when filter changes
@@ -262,7 +279,13 @@ export default function AdminShortsPage() {
   const openCreate = () => {
     setMode("create");
     setActiveItem(null);
-    setForm({ url: "", title: "", description: "", channel: "", isActive: true });
+    setForm({
+      url: "",
+      title: "",
+      description: "",
+      channel: "",
+      isActive: true,
+    });
     setModalOpen(true);
   };
 
@@ -325,7 +348,9 @@ export default function AdminShortsPage() {
       setModalOpen(false);
 
       if (data.video) {
-        setVideos((prev) => prev.map((v) => (v._id === data.video._id ? data.video : v)));
+        setVideos((prev) =>
+          prev.map((v) => (v._id === data.video._id ? data.video : v)),
+        );
       } else {
         await fetchAdminVideos();
       }
@@ -335,13 +360,16 @@ export default function AdminShortsPage() {
   };
 
   const softDelete = async (id) => {
-    if (!window.confirm("Soft delete this video? (It becomes inactive)")) return;
+    if (!window.confirm("Soft delete this video? (It becomes inactive)"))
+      return;
     if (!authHeaders) return showToast("error", "Login required");
 
     try {
       await api(`${ADMIN_API}/${id}`, { method: "DELETE" });
       showToast("success", "Video deleted (soft)");
-      setVideos((prev) => prev.map((v) => (v._id === id ? { ...v, isActive: false } : v)));
+      setVideos((prev) =>
+        prev.map((v) => (v._id === id ? { ...v, isActive: false } : v)),
+      );
     } catch (e) {
       showToast("error", e.message || "Delete error");
     }
@@ -357,7 +385,9 @@ export default function AdminShortsPage() {
       if (data.video) {
         setVideos((prev) => prev.map((v) => (v._id === id ? data.video : v)));
       } else {
-        setVideos((prev) => prev.map((v) => (v._id === id ? { ...v, isActive: true } : v)));
+        setVideos((prev) =>
+          prev.map((v) => (v._id === id ? { ...v, isActive: true } : v)),
+        );
       }
     } catch (e) {
       showToast("error", e.message || "Restore error");
@@ -374,8 +404,16 @@ export default function AdminShortsPage() {
       });
 
       showToast("success", data.video?.isActive ? "Activated" : "Deactivated");
-      if (data.video) setVideos((prev) => prev.map((x) => (x._id === v._id ? data.video : x)));
-      else setVideos((prev) => prev.map((x) => (x._id === v._id ? { ...x, isActive: !x.isActive } : x)));
+      if (data.video)
+        setVideos((prev) =>
+          prev.map((x) => (x._id === v._id ? data.video : x)),
+        );
+      else
+        setVideos((prev) =>
+          prev.map((x) =>
+            x._id === v._id ? { ...x, isActive: !x.isActive } : x,
+          ),
+        );
     } catch (e) {
       showToast("error", e.message || "Update error");
     }
@@ -397,7 +435,8 @@ export default function AdminShortsPage() {
     navigate("/login");
   };
 
-  const canUsePage = !authLoading && !!token && (!user || user.role === "admin");
+  const canUsePage =
+    !authLoading && !!token && (!user || user.role === "admin");
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -409,11 +448,15 @@ export default function AdminShortsPage() {
               "flex items-center gap-2 rounded-xl border px-4 py-3 shadow-2xl",
               toast.type === "success" && "bg-green-600/15 border-green-600/30",
               toast.type === "error" && "bg-red-600/15 border-red-600/30",
-              toast.type === "info" && "bg-blue-600/15 border-blue-600/30"
+              toast.type === "info" && "bg-blue-600/15 border-blue-600/30",
             )}
           >
-            {toast.type === "success" ? <CheckCircle2 size={18} className="text-green-300" /> : null}
-            {toast.type === "error" ? <AlertTriangle size={18} className="text-red-300" /> : null}
+            {toast.type === "success" ? (
+              <CheckCircle2 size={18} className="text-green-300" />
+            ) : null}
+            {toast.type === "error" ? (
+              <AlertTriangle size={18} className="text-red-300" />
+            ) : null}
             <span className="text-sm">{toast.msg}</span>
           </div>
         </div>
@@ -423,7 +466,9 @@ export default function AdminShortsPage() {
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <h1 className="text-2xl font-bold">Admin Videos Dashboard</h1>
-            <p className="text-gray-400 text-sm">Manage YouTube videos (create, edit, soft delete, restore).</p>
+            <p className="text-gray-400 text-sm">
+              Manage YouTube videos (create, edit, soft delete, restore).
+            </p>
           </div>
 
           <div className="flex items-center gap-2">
@@ -448,7 +493,10 @@ export default function AdminShortsPage() {
         <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-12">
           <div className="md:col-span-6">
             <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+              <Search
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+                size={18}
+              />
               <Input
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
@@ -460,7 +508,11 @@ export default function AdminShortsPage() {
           </div>
 
           <div className="md:col-span-3">
-            <Select value={status} onChange={(e) => setStatus(e.target.value)} disabled={!canUsePage}>
+            <Select
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              disabled={!canUsePage}
+            >
               <option value="all">All</option>
               <option value="active">Active only</option>
               <option value="inactive">Inactive only</option>
@@ -533,9 +585,13 @@ export default function AdminShortsPage() {
           {loading ? (
             <div className="p-10 text-center text-gray-400">Loading...</div>
           ) : !canUsePage ? (
-            <div className="p-10 text-center text-gray-500">Login as admin to view videos.</div>
+            <div className="p-10 text-center text-gray-500">
+              Login as admin to view videos.
+            </div>
           ) : videos.length === 0 ? (
-            <div className="p-10 text-center text-gray-400">No videos found.</div>
+            <div className="p-10 text-center text-gray-400">
+              No videos found.
+            </div>
           ) : (
             <div className="divide-y divide-gray-800">
               {videos.map((v) => (
@@ -559,8 +615,14 @@ export default function AdminShortsPage() {
                           <h3 className="truncate font-semibold text-white max-w-[520px]">
                             {v.title || "Untitled"}
                           </h3>
-                          {v.isActive ? <Badge tone="green">Active</Badge> : <Badge tone="red">Inactive</Badge>}
-                          <Badge tone="blue">{v.youtubeChannel || "Unknown Channel"}</Badge>
+                          {v.isActive ? (
+                            <Badge tone="green">Active</Badge>
+                          ) : (
+                            <Badge tone="red">Inactive</Badge>
+                          )}
+                          <Badge tone="blue">
+                            {v.youtubeChannel || "Unknown Channel"}
+                          </Badge>
                         </div>
 
                         <p className="mt-1 text-sm text-gray-400 line-clamp-2 max-w-[720px]">
@@ -569,36 +631,58 @@ export default function AdminShortsPage() {
 
                         <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-400">
                           <span className="rounded-lg border border-gray-800 bg-gray-900 px-2 py-1">
-                            Likes: <b className="text-white">{v.likesCount ?? v.likedBy?.length ?? 0}</b>
+                            Likes:{" "}
+                            <b className="text-white">
+                              {v.likesCount ?? v.likedBy?.length ?? 0}
+                            </b>
                           </span>
                           <span className="rounded-lg border border-gray-800 bg-gray-900 px-2 py-1">
-                            Favorites: <b className="text-white">{v.favoritesCount ?? v.favoritedBy?.length ?? 0}</b>
+                            Favorites:{" "}
+                            <b className="text-white">
+                              {v.favoritesCount ?? v.favoritedBy?.length ?? 0}
+                            </b>
                           </span>
                           <span className="rounded-lg border border-gray-800 bg-gray-900 px-2 py-1">
                             Views: <b className="text-white">{v.views ?? 0}</b>
                           </span>
                           <span className="rounded-lg border border-gray-800 bg-gray-900 px-2 py-1">
-                            Shares: <b className="text-white">{v.shares ?? 0}</b>
+                            Shares:{" "}
+                            <b className="text-white">{v.shares ?? 0}</b>
                           </span>
                           <span className="rounded-lg border border-gray-800 bg-gray-900 px-2 py-1">
-                            ID: <span className="text-white">{String(v._id).slice(0, 8)}...</span>
+                            ID:{" "}
+                            <span className="text-white">
+                              {String(v._id).slice(0, 8)}...
+                            </span>
                           </span>
                         </div>
                       </div>
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2 md:justify-end">
-                      <Button tone="ghost" onClick={() => copyText(v._id)} title="Copy Mongo ID">
+                      <Button
+                        tone="ghost"
+                        onClick={() => copyText(v._id)}
+                        title="Copy Mongo ID"
+                      >
                         <Copy size={16} />
                         Copy ID
                       </Button>
 
-                      <Button tone="ghost" onClick={() => window.open(v.youtubeUrl, "_blank")} title="Open on YouTube">
+                      <Button
+                        tone="ghost"
+                        onClick={() => window.open(v.youtubeUrl, "_blank")}
+                        title="Open on YouTube"
+                      >
                         <ExternalLink size={16} />
                         Open
                       </Button>
 
-                      <Button tone="ghost" onClick={() => openEdit(v)} title="Edit">
+                      <Button
+                        tone="ghost"
+                        onClick={() => openEdit(v)}
+                        title="Edit"
+                      >
                         <Pencil size={16} />
                         Edit
                       </Button>
@@ -612,12 +696,20 @@ export default function AdminShortsPage() {
                       </Button>
 
                       {v.isActive ? (
-                        <Button tone="danger" onClick={() => softDelete(v._id)} title="Soft delete">
+                        <Button
+                          tone="danger"
+                          onClick={() => softDelete(v._id)}
+                          title="Soft delete"
+                        >
                           <Trash2 size={16} />
                           Delete
                         </Button>
                       ) : (
-                        <Button tone="success" onClick={() => restore(v._id)} title="Restore">
+                        <Button
+                          tone="success"
+                          onClick={() => restore(v._id)}
+                          title="Restore"
+                        >
                           <RotateCcw size={16} />
                           Restore
                         </Button>
@@ -669,7 +761,9 @@ export default function AdminShortsPage() {
               onChange={(e) => setForm((p) => ({ ...p, url: e.target.value }))}
               placeholder="https://youtube.com/shorts/... or https://youtu.be/..."
             />
-            <p className="mt-1 text-xs text-gray-500">Supports shorts, watch?v=, embed, youtu.be</p>
+            <p className="mt-1 text-xs text-gray-500">
+              Supports shorts, watch?v=, embed, youtu.be
+            </p>
           </div>
 
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
@@ -677,7 +771,9 @@ export default function AdminShortsPage() {
               <label className="text-sm text-gray-300">Title</label>
               <Input
                 value={form.title}
-                onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, title: e.target.value }))
+                }
                 placeholder="Video title"
               />
             </div>
@@ -686,7 +782,9 @@ export default function AdminShortsPage() {
               <label className="text-sm text-gray-300">Channel</label>
               <Input
                 value={form.channel}
-                onChange={(e) => setForm((p) => ({ ...p, channel: e.target.value }))}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, channel: e.target.value }))
+                }
                 placeholder="Channel name"
               />
             </div>
@@ -697,7 +795,9 @@ export default function AdminShortsPage() {
             <TextArea
               rows={4}
               value={form.description}
-              onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
+              onChange={(e) =>
+                setForm((p) => ({ ...p, description: e.target.value }))
+              }
               placeholder="Short description..."
             />
           </div>
@@ -708,7 +808,9 @@ export default function AdminShortsPage() {
                 id="isActive"
                 type="checkbox"
                 checked={form.isActive}
-                onChange={(e) => setForm((p) => ({ ...p, isActive: e.target.checked }))}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, isActive: e.target.checked }))
+                }
               />
               <label htmlFor="isActive" className="text-sm text-gray-300">
                 Active
@@ -723,12 +825,20 @@ export default function AdminShortsPage() {
             </Button>
 
             {mode === "create" ? (
-              <Button tone="primary" onClick={createYoutube} disabled={!canUsePage}>
+              <Button
+                tone="primary"
+                onClick={createYoutube}
+                disabled={!canUsePage}
+              >
                 <Save size={16} />
                 Create
               </Button>
             ) : (
-              <Button tone="primary" onClick={updateVideo} disabled={!canUsePage}>
+              <Button
+                tone="primary"
+                onClick={updateVideo}
+                disabled={!canUsePage}
+              >
                 <Save size={16} />
                 Save changes
               </Button>

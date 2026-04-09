@@ -11,7 +11,7 @@ import {
   FiRefreshCw,
   FiSearch,
 } from "react-icons/fi";
-import { AuthContext } from "../context/authContext.jsx";
+import { AuthContext } from "../context/AuthContext.jsx";
 
 const API_BASE_URL = import.meta.env.VITE_BASE_URL;
 const API_ENDPOINT = `${API_BASE_URL}/api/sundayService`;
@@ -26,8 +26,12 @@ const toDateInputValue = (v) => {
 const docFrom = (res) => res?.data?.data || res?.data?.preaching || res?.data;
 
 export default function AdminSundayPreachings() {
-  const { token: ctxToken, isAuthenticated, authLoading, user } =
-    useContext(AuthContext) || {};
+  const {
+    token: ctxToken,
+    isAuthenticated,
+    authLoading,
+    user,
+  } = useContext(AuthContext) || {};
   const token = ctxToken || localStorage.getItem("token");
 
   const headers = useMemo(() => {
@@ -65,7 +69,10 @@ export default function AdminSundayPreachings() {
   const showMessage = (text, type = "success") => {
     setMessage({ text, type });
     window.clearTimeout(showMessage._t);
-    showMessage._t = window.setTimeout(() => setMessage({ text: "", type: "" }), 4500);
+    showMessage._t = window.setTimeout(
+      () => setMessage({ text: "", type: "" }),
+      4500,
+    );
   };
 
   const resetForm = () => {
@@ -122,7 +129,10 @@ export default function AdminSundayPreachings() {
       setSortOrder(nextSort);
     } catch (err) {
       console.error("Fetch preachings failed:", err?.response?.data || err);
-      showMessage(err.response?.data?.message || "Could not load Sunday preachings", "error");
+      showMessage(
+        err.response?.data?.message || "Could not load Sunday preachings",
+        "error",
+      );
       setPreachings([]);
     } finally {
       setLoading(false);
@@ -167,11 +177,15 @@ export default function AdminSundayPreachings() {
       const payload = buildPayload();
 
       if (editingId) {
-        const res = await axios.put(`${API_ENDPOINT}/${editingId}`, payload, { headers });
+        const res = await axios.put(`${API_ENDPOINT}/${editingId}`, payload, {
+          headers,
+        });
         const updatedDoc = docFrom(res);
 
         showMessage("Preaching updated successfully!", "success");
-        setPreachings((prev) => prev.map((p) => (p._id === editingId ? updatedDoc : p)));
+        setPreachings((prev) =>
+          prev.map((p) => (p._id === editingId ? updatedDoc : p)),
+        );
       } else {
         const res = await axios.post(API_ENDPOINT, payload, { headers });
         const createdDoc = docFrom(res);
@@ -183,7 +197,10 @@ export default function AdminSundayPreachings() {
       resetForm();
     } catch (err) {
       console.error("Save failed:", err?.response?.data || err);
-      showMessage(err.response?.data?.message || "Failed to save preaching", "error");
+      showMessage(
+        err.response?.data?.message || "Failed to save preaching",
+        "error",
+      );
     } finally {
       setSaving(false);
     }
@@ -214,7 +231,10 @@ export default function AdminSundayPreachings() {
       setPreachings((prev) => prev.filter((p) => p._id !== id));
     } catch (err) {
       console.error("Delete failed:", err?.response?.data || err);
-      showMessage(err.response?.data?.message || "Failed to delete preaching", "error");
+      showMessage(
+        err.response?.data?.message || "Failed to delete preaching",
+        "error",
+      );
     } finally {
       setDeletingId(null);
     }
@@ -242,7 +262,9 @@ export default function AdminSundayPreachings() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
         <div className="bg-white rounded-2xl shadow-lg p-10 text-center max-w-md border border-gray-100">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">Access Denied</h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">
+            Access Denied
+          </h2>
           <p className="text-gray-600 mb-6">
             You must be logged in as an admin to manage Sunday preachings.
           </p>
@@ -294,7 +316,10 @@ export default function AdminSundayPreachings() {
             </p>
           </div>
 
-          <form onSubmit={onSearch} className="flex items-center gap-2 w-full sm:w-auto">
+          <form
+            onSubmit={onSearch}
+            className="flex items-center gap-2 w-full sm:w-auto"
+          >
             <div className="relative flex-1 sm:w-[340px]">
               <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
               <input
@@ -400,7 +425,8 @@ export default function AdminSundayPreachings() {
 
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Full Sermon Notes / Message <span className="text-red-500">*</span>
+                  Full Sermon Notes / Message{" "}
+                  <span className="text-red-500">*</span>
                 </label>
                 <textarea
                   name="fullDescription"
@@ -464,8 +490,8 @@ export default function AdminSundayPreachings() {
                   saving
                     ? "bg-gray-400 text-white cursor-not-allowed"
                     : editingId
-                    ? "bg-yellow-600 hover:bg-yellow-700 text-white"
-                    : "bg-blue-600 hover:bg-blue-700 text-white"
+                      ? "bg-yellow-600 hover:bg-yellow-700 text-white"
+                      : "bg-blue-600 hover:bg-blue-700 text-white"
                 }`}
               >
                 {saving ? (
@@ -501,7 +527,9 @@ export default function AdminSundayPreachings() {
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20">
             <div className="animate-spin rounded-full h-14 w-14 border-4 border-blue-600 border-t-transparent mb-4"></div>
-            <p className="text-gray-600 text-lg">Loading Sunday preachings...</p>
+            <p className="text-gray-600 text-lg">
+              Loading Sunday preachings...
+            </p>
           </div>
         ) : preachings.length === 0 ? (
           <div className="bg-white rounded-2xl shadow border p-12 text-center">
@@ -522,7 +550,9 @@ export default function AdminSundayPreachings() {
               <div className="flex items-center gap-2">
                 <button
                   disabled={page <= 1}
-                  onClick={() => fetchPreachings({ page: Math.max(1, page - 1) })}
+                  onClick={() =>
+                    fetchPreachings({ page: Math.max(1, page - 1) })
+                  }
                   className="px-4 py-2 rounded-lg border bg-white hover:bg-gray-50 disabled:opacity-50"
                 >
                   Prev
@@ -533,7 +563,9 @@ export default function AdminSundayPreachings() {
                 </div>
                 <button
                   disabled={page >= pages}
-                  onClick={() => fetchPreachings({ page: Math.min(pages, page + 1) })}
+                  onClick={() =>
+                    fetchPreachings({ page: Math.min(pages, page + 1) })
+                  }
                   className="px-4 py-2 rounded-lg border bg-white hover:bg-gray-50 disabled:opacity-50"
                 >
                   Next
@@ -569,7 +601,9 @@ export default function AdminSundayPreachings() {
                       </p>
                       <p>
                         <strong>Service #:</strong>{" "}
-                        {p.serviceNumber === 0 || p.serviceNumber ? p.serviceNumber : "—"}
+                        {p.serviceNumber === 0 || p.serviceNumber
+                          ? p.serviceNumber
+                          : "—"}
                       </p>
                     </div>
 

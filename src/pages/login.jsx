@@ -15,7 +15,7 @@ import {
 } from "react-icons/ai";
 import { Link, useNavigate } from "react-router-dom";
 import Logo from "../assets/img/logo.jpg";
-import { AuthContext } from "../context/authContext.jsx";
+import { AuthContext } from "../context/AuthContext.jsx";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 

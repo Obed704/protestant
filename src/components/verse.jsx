@@ -6,7 +6,7 @@ import React, {
   useCallback,
 } from "react";
 import axios from "axios";
-import { AuthContext } from "../context/authContext.jsx";
+import { AuthContext } from "../context/AuthContext.jsx";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FiStar,

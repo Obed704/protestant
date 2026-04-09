@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import EnhancedHeader from "../components/header.jsx";
 import Footer from "../components/footer.jsx";
 import BaptismNav from "../components/BaptismNav";
-import { AuthContext } from "../context/authContext.jsx";
+import { AuthContext } from "../context/AuthContext.jsx";
 import {
   Calendar,
   MapPin,

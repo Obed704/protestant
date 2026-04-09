@@ -9,7 +9,7 @@ import {
   FaQuoteLeft,
 } from "react-icons/fa";
 import { AnimatePresence, motion } from "framer-motion";
-import { AuthContext } from "../context/authContext.jsx";
+import { AuthContext } from "../context/AuthContext.jsx";
 import Confetti from "react-confetti";
 import { useAppData } from "../context/DataContext.jsx";
 
