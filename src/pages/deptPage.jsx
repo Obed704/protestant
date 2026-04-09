@@ -1,18 +1,15 @@
-import Header from "../components/header.jsx";
+import Header from "../components/Header.jsx";
 import DepartmentDetail from "../components/deptDetails.jsx";
-import Footer from "../components/footer.jsx";
+import Footer from "../components/Footer.jsx";
 
-
-const DeptPage
- = () => {
+const DeptPage = () => {
   return (
     <>
       <Header />
-      <DepartmentDetail/>
+      <DepartmentDetail />
       <Footer />
     </>
   );
 };
 
-export default DeptPage
-;
+export default DeptPage;

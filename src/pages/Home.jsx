@@ -8,7 +8,7 @@ import HolidayConnect from "../components/holidayConnect.jsx";
 import Departments from "../components/DepartmentComp.jsx";
 import UpcomingEventsPreview from "../components/UpcomingEventsPreview.jsx";
 import GospelSongs from "../components/songs.jsx";
-import Footer from "../components/footer.jsx";
+import Footer from "../components/Footer.jsx";
 
 // Inner component that safely uses the context
 const HomeContent = () => {

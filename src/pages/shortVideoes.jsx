@@ -1,5 +1,5 @@
 import Shorts from "../components/shorts.jsx";
-import Header from "../components/header";
+import Header from "../components/Header.jsx";
 import Sidebar from "../components/sidebar.jsx";
 
 const ShortVideos = () => {

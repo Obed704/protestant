@@ -19,8 +19,8 @@ import {
   FaChevronRight,
   FaBars,
 } from "react-icons/fa";
-import Header from "../components/header";
-import Footer from "../components/footer";
+import Header from "../components/Header.jsx";
+import Footer from "../components/Footer.jsx";
 
 const API_BASE_URL =
   import.meta.env.VITE_BASE_URL || import.meta.env.VITE_API_URL;

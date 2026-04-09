@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import axios from "axios";
-import EnhancedHeader from "../components/header";
-import Footer from "../components/footer";
+import EnhancedHeader from "../components/Header.jsx";
+import Footer from "../components/Footer.jsx";
 import {
   CalendarDays,
   MapPin,

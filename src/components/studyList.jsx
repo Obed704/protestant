@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import EnhancedHeader from "./header";
-import Footer from "./footer";
+import EnhancedHeader from "./Header.jsx";
+import Footer from "./Footer.jsx";
 
 // Use your existing BASE_URL from .env → exposed with VITE_ prefix for frontend
 const API_BASE_URL = import.meta.env.VITE_BASE_URL;

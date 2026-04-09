@@ -1,7 +1,7 @@
 import React from "react"; // Add this
-import Header from "../components/header.jsx";
+import Header from "../components/Header.jsx";
 import WeekThemeSlideshow from "./weeksPage.jsx";
-import Footer from "../components/footer.jsx";
+import Footer from "../components/Footer.jsx";
 
 const WeeksPage = () => {
   return (

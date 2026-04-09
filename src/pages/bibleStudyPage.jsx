@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
-import Header from "../components/header";
-import Footer from "../components/footer";
+import Header from "../components/Header.jsx";
+import Footer from "../components/Footer.jsx";
 import {
   Search,
   BookOpen,
@@ -114,7 +114,9 @@ const BibleStudyPage = () => {
         }
       });
 
-      const res = await axios.get(`${API_BASE}/api/studies?${params.toString()}`);
+      const res = await axios.get(
+        `${API_BASE}/api/studies?${params.toString()}`,
+      );
       setStudies(res.data.studies || res.data || []);
     } catch (err) {
       console.error("Failed to fetch studies:", err);
@@ -204,7 +206,7 @@ const BibleStudyPage = () => {
       setIsPopupOpen(true);
 
       const recentViews = JSON.parse(
-        localStorage.getItem("recentStudyViews") || "[]"
+        localStorage.getItem("recentStudyViews") || "[]",
       );
 
       const updatedViews = [
@@ -244,13 +246,13 @@ const BibleStudyPage = () => {
 
       setStudies((prev) =>
         prev.map((study) =>
-          study._id === studyId ? { ...study, likes: res.data.likes } : study
-        )
+          study._id === studyId ? { ...study, likes: res.data.likes } : study,
+        ),
       );
 
       showNotification(
         res.data.liked ? "Study liked!" : "Like removed",
-        res.data.liked ? "success" : "info"
+        res.data.liked ? "success" : "info",
       );
     } catch (err) {
       console.error("Failed to like study:", err);
@@ -264,7 +266,7 @@ const BibleStudyPage = () => {
         `${API_BASE}/api/studies/${studyId}/favorite`,
         {
           userId: user.id,
-        }
+        },
       );
 
       const newFavorites = { ...favorites };
@@ -279,7 +281,7 @@ const BibleStudyPage = () => {
 
       showNotification(
         res.data.favorited ? "Added to favorites!" : "Removed from favorites",
-        res.data.favorited ? "success" : "info"
+        res.data.favorited ? "success" : "info",
       );
     } catch (err) {
       console.error("Failed to favorite study:", err);
@@ -305,7 +307,7 @@ const BibleStudyPage = () => {
 
     showNotification(
       newBookmarks[studyId] ? "Study bookmarked" : "Bookmark removed",
-      newBookmarks[studyId] ? "success" : "info"
+      newBookmarks[studyId] ? "success" : "info",
     );
   };
 
@@ -406,8 +408,8 @@ Downloaded from Bible Study App - ${new Date().toLocaleDateString()}
       type === "success"
         ? "bg-green-100 text-green-800 border border-green-200"
         : type === "error"
-        ? "bg-red-100 text-red-800 border border-red-200"
-        : "bg-blue-100 text-blue-800 border border-blue-200"
+          ? "bg-red-100 text-red-800 border border-red-200"
+          : "bg-blue-100 text-blue-800 border border-blue-200"
     }`;
     notification.textContent = message;
 
@@ -417,7 +419,7 @@ Downloaded from Bible Study App - ${new Date().toLocaleDateString()}
       notification.classList.add(
         "opacity-0",
         "transition-opacity",
-        "duration-300"
+        "duration-300",
       );
       setTimeout(() => notification.remove(), 300);
     }, 3000);
@@ -484,8 +486,8 @@ Downloaded from Bible Study App - ${new Date().toLocaleDateString()}
                 study.difficulty === "beginner"
                   ? "bg-green-500/20 text-green-300 border border-green-500/30"
                   : study.difficulty === "intermediate"
-                  ? "bg-yellow-500/20 text-yellow-300 border border-yellow-500/30"
-                  : "bg-red-500/20 text-red-300 border border-red-500/30"
+                    ? "bg-yellow-500/20 text-yellow-300 border border-yellow-500/30"
+                    : "bg-red-500/20 text-red-300 border border-red-500/30"
               }`}
             >
               {study.difficulty || "Intermediate"}
@@ -553,7 +555,10 @@ Downloaded from Bible Study App - ${new Date().toLocaleDateString()}
             </div>
 
             <div className="flex items-center text-sm text-gray-400">
-              <Calendar size={14} className="mr-2 flex-shrink-0 text-blue-400" />
+              <Calendar
+                size={14}
+                className="mr-2 flex-shrink-0 text-blue-400"
+              />
               <span>{formatDate(study.createdAt)}</span>
             </div>
 
@@ -642,8 +647,8 @@ Downloaded from Bible Study App - ${new Date().toLocaleDateString()}
                     study.difficulty === "beginner"
                       ? "bg-green-500/20 text-green-300 border border-green-500/30"
                       : study.difficulty === "intermediate"
-                      ? "bg-yellow-500/20 text-yellow-300 border border-yellow-500/30"
-                      : "bg-red-500/20 text-red-300 border border-red-500/30"
+                        ? "bg-yellow-500/20 text-yellow-300 border border-yellow-500/30"
+                        : "bg-red-500/20 text-red-300 border border-red-500/30"
                   }`}
                 >
                   {study.difficulty || "Intermediate"}
@@ -656,7 +661,9 @@ Downloaded from Bible Study App - ${new Date().toLocaleDateString()}
                 )}
 
                 <span className="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-sm font-medium border border-blue-500/30">
-                  {study.category ? study.category.replace("_", " ") : "Topical"}
+                  {study.category
+                    ? study.category.replace("_", " ")
+                    : "Topical"}
                 </span>
               </div>
 
@@ -780,9 +787,9 @@ Downloaded from Bible Study App - ${new Date().toLocaleDateString()}
                               onClick={() =>
                                 window.open(
                                   `https://www.biblegateway.com/passage/?search=${encodeURIComponent(
-                                    verse.reference
+                                    verse.reference,
                                   )}&version=${verse.version || "NIV"}`,
-                                  "_blank"
+                                  "_blank",
                                 )
                               }
                               className="text-blue-400 hover:text-blue-300 text-sm flex items-center gap-1"
@@ -1281,7 +1288,8 @@ Downloaded from Bible Study App - ${new Date().toLocaleDateString()}
                             {study.title}
                           </div>
                           <div className="text-sm text-gray-400 mt-1">
-                            {study.views || 0} views • {study.likes?.length || 0} likes
+                            {study.views || 0} views •{" "}
+                            {study.likes?.length || 0} likes
                           </div>
                         </button>
                       ))}
@@ -1410,7 +1418,8 @@ Downloaded from Bible Study App - ${new Date().toLocaleDateString()}
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                 <div>
                   <h2 className="text-3xl font-bold text-yellow-300">
-                    {studies.length} Study{studies.length !== 1 ? "ies" : ""} Found
+                    {studies.length} Study{studies.length !== 1 ? "ies" : ""}{" "}
+                    Found
                   </h2>
 
                   {filters.search && (
@@ -1439,7 +1448,8 @@ Downloaded from Bible Study App - ${new Date().toLocaleDateString()}
                   </h3>
                   <p className="text-gray-500 mb-8 max-w-md mx-auto">
                     Try adjusting your filters or check back for new studies.
-                    You can also search for different topics or difficulty levels.
+                    You can also search for different topics or difficulty
+                    levels.
                   </p>
                   <button
                     onClick={clearFilters}

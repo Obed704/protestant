@@ -2,8 +2,8 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { AuthContext } from "../context/authContext.jsx";
-import EnhancedHeader from "../components/header.jsx";
-import Footer from "../components/footer.jsx";
+import EnhancedHeader from "../components/Header.jsx";
+import Footer from "../components/Footer.jsx";
 import { Palette } from "lucide-react";
 
 const API_BASE_URL = import.meta.env.VITE_BASE_URL;
