@@ -1,7 +1,7 @@
 // src/pages/NewChat.jsx
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import axios from "axios";
-import EnhancedHeader from "../components/header.jsx";
+import EnhancedHeader from "../components/Header.jsx";
 import Footer from "../components/Footer.jsx";
 import { AuthContext } from "../context/AuthContext.jsx";
 import { Search, UserPlus, ArrowLeft, Palette } from "lucide-react";

@@ -1,5 +1,5 @@
 import Tube from "../components/tube.jsx";
-import Header from "../components/header.jsx";
+import Header from "../components/Header.jsx";
 import Sidebar from "../components/sidebar.jsx";
 
 export default function TubePage() {

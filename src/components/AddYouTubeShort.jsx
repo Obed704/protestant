@@ -1,5 +1,5 @@
 import React, { useState, useContext } from "react";
-import { AuthContext } from "../context/authContext.jsx";
+import { AuthContext } from "../context/AuthContext.jsx";
 
 // Use your existing BASE_URL from .env → exposed with VITE_ prefix for frontend
 const API_BASE_URL = import.meta.env.VITE_BASE_URL;
@@ -36,7 +36,7 @@ const AddYouTubeShort = ({ onVideoAdded }) => {
     try {
       // Use YouTube oEmbed for title and author
       const oembedRes = await fetch(
-        `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`
+        `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`,
       );
 
       if (oembedRes.ok) {
@@ -173,7 +173,9 @@ const AddYouTubeShort = ({ onVideoAdded }) => {
                 <h3 className="text-white font-semibold line-clamp-2">
                   {preview.title}
                 </h3>
-                <p className="text-gray-400 text-sm mt-1">By: {preview.author}</p>
+                <p className="text-gray-400 text-sm mt-1">
+                  By: {preview.author}
+                </p>
               </div>
             </div>
           </div>

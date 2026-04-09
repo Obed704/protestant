@@ -39,7 +39,7 @@ import {
   FaWhatsapp,
 } from "react-icons/fa";
 import axios from "axios";
-import Header from "../components/header.jsx";
+import Header from "../components/Header.jsx";
 import Footer from "../components/Footer.jsx";
 import html2pdf from "html2pdf.js/dist/html2pdf.bundle.min.js";
 

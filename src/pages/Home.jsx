@@ -1,7 +1,7 @@
 import React from "react";
 import { DataProvider, useAppData } from "../context/DataContext.jsx";
 
-import Header from "../components/header.jsx";
+import Header from "../components/Header.jsx";
 import BibleVerse from "../components/verse.jsx";
 import WeekTheme from "../components/week.jsx";
 import HolidayConnect from "../components/holidayConnect.jsx";

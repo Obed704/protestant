@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
 import { AuthContext } from "../context/AuthContext.jsx";
-import Header from "../components/header.jsx";
+import Header from "../components/Header.jsx";
 import Footer from "../components/Footer.jsx";
 
 const API_BASE_URL = import.meta.env.VITE_BASE_URL || "";
