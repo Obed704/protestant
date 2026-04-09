@@ -1,5 +1,5 @@
 import LargeVideos from "../components/largeVideos.jsx";
-import Header from "../components/header.jsx";
+import Header from "../components/Header.jsx";
 import Sidebar from "../components/sidebar.jsx";
 
 export default function LargeVideosPage() {
@@ -11,7 +11,7 @@ export default function LargeVideosPage() {
         <div className="flex-1 order-2 md:order-2 overflow-auto">
           <LargeVideos />
         </div>
-{/* 
+        {/* 
         <div className="order-1 md:order-1 w-full md:w-48 bg-gray-900 text-white">
           <Sidebar />
         </div> */}
