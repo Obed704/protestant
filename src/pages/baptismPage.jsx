@@ -7,7 +7,7 @@ import React, {
 } from "react";
 import axios from "axios";
 import EnhancedHeader from "../components/header.jsx";
-import Footer from "../components/footer.jsx";
+import Footer from "../components/Footer.jsx";
 import BaptismNav from "../components/BaptismNav.jsx";
 import { AuthContext } from "../context/AuthContext.jsx";
 import {
