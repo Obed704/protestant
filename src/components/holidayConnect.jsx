@@ -56,7 +56,9 @@ const HolidayConnect = () => {
       <div className="absolute inset-0 z-0">
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-50 md:opacity-100"
-          style={{ backgroundImage: `url('img3.jpg')` }}
+          style={{
+            backgroundImage: `url('https://images.unsplash.com/photo-1507187632231-5beb21a654a2?q=80&w=1201&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')`,
+          }}
         />
         <div className="absolute inset-0 bg-gradient-to-tr from-slate-950 via-emerald-950/60 to-indigo-950/50" />
         <div className="absolute inset-0 backdrop-blur-[4px]" />

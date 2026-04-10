@@ -34,7 +34,7 @@ import { MdGroups } from "react-icons/md";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 const BG_IMAGE =
-  "https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&q=80&w=2000";
+  "https://images2-wpc.corriereobjects.it/GaMcK2kT19CKnHfuS5AK6e_R7bA=/fit-in/1280x720/style.corriere.it/assets/uploads/2025/01/gonzatto-hamza-lahlimi-_HVARV69ABQ-unsplash.jpg?v=543676";
 
 const DepartmentDetail = () => {
   const { user, token, isAuthenticated } = useContext(AuthContext);

@@ -99,7 +99,7 @@ export default function LoginPage() {
       {/* Background unchanged */}
       <div className="absolute inset-0 z-0">
         <img
-          src="/img2.jpg"
+          src="https://images2-wpc.corriereobjects.it/GaMcK2kT19CKnHfuS5AK6e_R7bA=/fit-in/1280x720/style.corriere.it/assets/uploads/2025/01/gonzatto-hamza-lahlimi-_HVARV69ABQ-unsplash.jpg?v=543676"
           alt="Spiritual landscape"
           className="w-full h-full object-cover"
         />
